@@ -22,10 +22,23 @@ export const addCategory = async (category) => {
     const db = await getDB();
     const tx = db.transaction('categories', 'readwrite');
     const store = tx.objectStore('categories');    
-    await store.add(category);
+    const addedId = await store.add(category);
+    return addedId;
   } catch (err) {
     console.error('Error adding category:', err);
     throw new Error('Virhe lisättäessä kategoriaa: ' + err);
+  }
+};
+
+export const getCategoryById = async (id) => {
+  try {
+    const db = await getDB();
+    const tx = db.transaction('categories', 'readonly');
+    const store = tx.objectStore('categories');
+    return await store.get(id);
+  } catch (err) {
+    console.error('Error fetching category by ID:', err);
+    throw new Error('Virhe haettaessa kategoriaa ID:llä: ' + err);
   }
 };
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
 import Accordion from '../components/Accordion';
 import StickyBottom from '../components/StickyBottom';
 import StickyTop from '../components/StickyTop';
@@ -8,20 +7,25 @@ import { ShoppingListItem } from '../components/Item';
 import Container, { SlideInContainerRight, ButtonGroup, FormContainer } from '../components/Container';
 import { InputWrapper, GroupLeft, GroupRight } from '../components/Container';
 import { InputQuantity, InputUnit } from '../components/Input';
-import { getProducts, getProductById, getCategories,  updateProduct, updateProducts, getProductsOnShoppingList, updateProductField } from '../controller';
+import { getProducts, getProductById, getCategories, updateProduct, updateProducts, getProductsOnShoppingList, updateProductField } from '../controller';
 import Info from '../components/Info';
 import Toast from '../components/Toast'; 
 import DisabledOverlay from '../components/DisabledOverlay';
+import {importShoppinglistData} from '../utils/dataUtils';
 
 const ShoppingList = ({ refresh = false, isMenuOpen }) => {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState([]); //ostolistalla olevat tuotteet
+  const [allProducts, setAllProducts] = useState([]); //kaikki tuotteet
   const [categories, setCategories] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState(new Set());
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [infoMessage, setInfoMessage] = useState('');
   const [isPrintOpen, setIsPrintOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [error, setError] = useState('');
   const [shoppingListText, setShoppingListText] = useState('');
+  const [importText, setImportText] = useState('');
+  const noCategoryName = "Ei kategoriaa";
 
   const handleOpenInfo = (message) => {
     if (message === 'print') {
@@ -46,20 +50,28 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
     setIsPrintOpen(false);
   };
 
+  const handleOpenImport = () => {
+    setIsImportOpen(true);
+  };
+
+  const handleCloseImport = () => {
+    setIsImportOpen(false);
+  };
+
   const fetchData = async () => {
     try {        
       const allProducts = await getProducts();
       const allCategories = await getCategories();
-
-      const shoppingListProducts = allProducts.filter(product => product.onShoppingList);     
+      const shoppingListProducts = allProducts.filter(product => product.onShoppingList);  
+      setAllProducts(allProducts);   
       setProducts(shoppingListProducts);
       setCategories(allCategories);
 
       const selected = new Set(shoppingListProducts.filter(product => product.selected).map(product => product.id));
       setSelectedProducts(selected);
-      } catch (err) {
-        setError(err.message);
-      }
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   useEffect(() => { 
@@ -141,7 +153,8 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
     if (categoryProducts.length > 0) {
       acc.push({
         id: category.id,
-        name: `${category.name} (${categoryProducts.length})`,
+        heading: `${category.name} (${categoryProducts.length})`,
+        name: `${category.name}`,
         products: categoryProducts,
       });
     }
@@ -153,7 +166,8 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
   if (uncategorizedProducts.length > 0) {
     groupedProducts.unshift({
       id: 'uncategorized',
-      name: `Ei kategoriaa (${uncategorizedProducts.length})`,
+      heading: noCategoryName + ` (${uncategorizedProducts.length})`,
+      name: noCategoryName,
       products: uncategorizedProducts,
     });
   }
@@ -173,6 +187,10 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
 
   const handleTextAreaChange = (event) => {
     setShoppingListText(event.target.value);
+  };
+
+  const handleImportTextAreaChange = (event) => {
+    setImportText(event.target.value);
   };
 
   const handleCopy = (event) => {
@@ -195,23 +213,35 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
   //TODO yritetään palauttaa painikkeiden väri klikkauksen jälkeen, ei toimi
   const resetButtonState = (event) => {
     const button = event.currentTarget;
-    button.blur();
+    button.blur();    
   };
 
-  // transientti props eli is"Jotain" edessä käytetään $ ettei välity DOM:lle
+  const handleImport = async () => {
+    try {
+      const { addedCategories, addedProducts, updatedProducts } = await importShoppinglistData(importText, categories, allProducts, noCategoryName);
+      fetchData(); 
+      setImportText('');
+      handleCloseImport();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  
+  
+// transientti props eli is"Jotain" edessä käytetään $ ettei välity DOM:lle
   return (
     <>
     { error && (
         <Toast message={error} onClose={() => setError('')} />
       )}
 
-      <DisabledOverlay $isDisabled={isPrintOpen}>
+      <DisabledOverlay $isDisabled={isPrintOpen || isImportOpen}>
       <Container $isMenuOpen={isMenuOpen} $isPrintOpen={isPrintOpen}>
          <StickyTop> 
             <b>Ostoslista</b>
          </StickyTop> 
         {groupedProducts.map(category => (
-          <Accordion key={category.id} title={category.name} defaultExpanded={true}>
+          <Accordion key={category.id} title={category.heading} defaultExpanded={true}>
             {category.products.map(product => (
               <ShoppingListItem key={product.id}>
                 <input
@@ -248,11 +278,12 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
                 disabled={selectedProducts.size === 0 }
                 onClick={handleRemoveSelected}
               >
-                Poista valitut listalta
+                Poista valitut
               </OkButton>
             </GroupLeft>
-            <GroupRight>              
-              <PrimaryButton onClick={handleOpenPrint}>Tulostettava lista</PrimaryButton>                        
+            <GroupRight>   
+              <PrimaryButton onClick={handleOpenImport}>Tuo lista</PrimaryButton>             
+              <ShareButton onClick={handleOpenPrint}>Jaa lista</ShareButton>                                      
             </GroupRight>
           </StickyBottom>
         </DisabledOverlay>
@@ -272,6 +303,24 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
             <GroupLeft>
               <CopyButton onClick={(event) => handleCopy(event)}>Kopioi leikepöydälle</CopyButton>                    
               <ShareButton onClick={(event) => handleShare(event)}>Jaa lista</ShareButton>   
+            </GroupLeft>
+          </ButtonGroup>
+        </FormContainer>
+      </SlideInContainerRight>
+      
+      <SlideInContainerRight $isOpen={isImportOpen}>
+        <CloseButtonComponent onClick={handleCloseImport}></CloseButtonComponent>
+        <FormContainer>      
+          <textarea       
+            value={importText}
+            onChange={handleImportTextAreaChange}
+            rows="20"
+            cols="40"
+            placeholder="Liitä ostoslista tähän..."
+          />
+          <ButtonGroup>
+            <GroupLeft>
+              <PrimaryButton onClick={handleImport}>Tuo lista</PrimaryButton>
             </GroupLeft>
           </ButtonGroup>
         </FormContainer>

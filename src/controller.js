@@ -1,4 +1,4 @@
-import { fetchCategories, addCategory as dbAddCategory, updateCategory as dbUpdateCategory, deleteCategory as dbDeleteCategory } from './dbUtils';
+import { fetchCategories, addCategory as dbAddCategory, getCategoryById as dbGetCategoryById, updateCategory as dbUpdateCategory, deleteCategory as dbDeleteCategory } from './dbUtils';
 import { fetchProducts, getProductById as dbGetProductById, addProduct as dbAddProduct, updateProduct as dbUpdateProduct, updateProducts as dbUpdateProducts, deleteProduct as dbDeleteProduct } from './dbUtils';
 import { clearDatabase } from './dbUtils'; //TODO tarvitaankohan
 import { importDataToDatabase, exportDataFromDatabase, loadExampleDataToDatabase } from './dbUtils';
@@ -39,7 +39,22 @@ export const addCategory = async (category) => {
   if (error) {
     throw new Error(error);
   }
-  await dbAddCategory(category);
+  const addedId = await dbAddCategory(category);
+  return addedId;
+};
+
+export const importCategory = async (category) => {
+  const error = validateCategory(category);
+  if (error) {
+    throw new Error(error);
+  }
+  //Importatulla kategorialla ei ole order-tietoa
+  const categories = await fetchCategories();
+  const newOrder = categories.length ? Math.max(...categories.map(cat => cat.order)) + 1 : 1;
+  category.order = newOrder;
+  const addedId = await dbAddCategory(category);
+  const addedCategory = await dbGetCategoryById(addedId);    
+  return addedCategory;
 };
 
 export const updateCategory = async (id, updatedCategory) => {
@@ -76,6 +91,17 @@ export const addProduct = async (product) => {
     const addedId = await dbAddProduct(product);
     return addedId;
 };
+
+export const importProduct = async (product) => {
+  const error = validateProduct(product);
+  if (error) {
+    throw new Error(error);
+  }
+  const addedId = await dbAddProduct(product);
+  const importedProduct = await dbGetProductById(addedId); 
+  return importedProduct;
+};
+
 
 export const updateProduct = async (id, updatedProduct) => {
     const error = validateProduct(updatedProduct);
