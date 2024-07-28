@@ -125,7 +125,7 @@ export const CancelButton = styled(props => (
 `;
 
 export const ConfirmDangerButton = styled(props => (
-  <ButtonComponent defaultText="Kyllä" {...props} />
+  <ButtonComponent defaultText="KyllÃ¤" {...props} />
 ))`
   background-color: #f44336;
   &:hover {
