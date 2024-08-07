@@ -6,10 +6,8 @@ import { CloseButtonComponent, MenuHelpButton } from './Button';
 import Info from './Info';
 import { GroupRight } from './Container';
 import DataManagement from '../DataManagement';
-import { getBrowserName } from '../utils/browserUtils';
-import DeviceInfo from './DeviceInfo';
 
-const programVersion = '2024-08-07: 1.182';
+const programVersion = '2024-07-28: 1.181';
 
 const MenuContainer = styled.div`
   position: fixed;
@@ -107,8 +105,7 @@ const MenuHeader = styled.h3`
 const Menu = ({ onDatabaseCleared, isOpen, onToggleMenu, onOpenInfo }) => {
   
   const [isInfoOpen, setIsInfoOpen] = useState(false);
-  //const [infoMessage, setInfoMessage] = useState('');
-  const [infoMessage, setInfoMessage] = useState(null);
+  const [infoMessage, setInfoMessage] = useState('');
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [dataManagementAction, setDataManagementAction] = useState('');
 
@@ -164,8 +161,7 @@ const Menu = ({ onDatabaseCleared, isOpen, onToggleMenu, onOpenInfo }) => {
         <MenuItem onClick={() => handleOpenDataManagement('delete')}>Poista tiedot<ChevronIcon/></MenuItem>
         <MenuHeader>Tietoja</MenuHeader>  
         <MenuItemText>Sovellus: Ostokseni</MenuItemText>
-        <MenuItemText>Versio: {programVersion}</MenuItemText>                
-        <MenuItem onClick={() => handleOpenInfo(<DeviceInfo></DeviceInfo>)}>Selaimesi: {getBrowserName()} <ChevronIcon /></MenuItem>                
+        <MenuItemText>Versio: {programVersion}</MenuItemText>
       </MenuList>
       <Info isOpen={isInfoOpen} onCancel={handleCloseInfo}>
         {infoMessage}
