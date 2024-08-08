@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTrash, faSave, faTimes, faPlus, faQuestion, faCopy, faShare } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTrash, faSave, faTimes, faPlus, faQuestion, faCopy, faPaste, faShare } from '@fortawesome/free-solid-svg-icons';
 
 const Button = styled.button`
   background-color: ${props => (props.disabled ? '#ccc' : props.bgColor || '#007BFF')};
@@ -46,34 +46,15 @@ cursor: pointer;
 background-color: white;
 `;
 
-export const CloseButtonComponent =({...props}) => (
-    <CloseButton >      
-          <FontAwesomeIcon icon={faTimes} size="1x" onClick={props.onClick} />
-    </CloseButton>
+export const CloseButtonComponent = ({ ...props }) => (
+  <CloseButton >
+    <FontAwesomeIcon icon={faTimes} size="1x" onClick={props.onClick} />
+  </CloseButton>
 );
 
 
-
-export const SaveButton = styled(props => (
-  <ButtonComponent icon={faSave} defaultText="Tallenna" {...props} />
-))`
-  background-color: #4caf50;
-  &:hover {
-    background-color: #388e3c;
-  }
-`;
-
-export const OkButton = styled(props => (
-    <ButtonComponent icon={faCheck} defaultText="OK" {...props} />
-  ))`
-    background-color: ${props => (props.disabled ? '#ccc' : props.bgColor || '#4caf50')};
-    &:hover {
-      background-color: ${props => (props.disabled ? '#ccc' : props.hoverBgColor || '#388e3c')};
-    }
-  `;
-
-export const CopyButton = styled(props => (
-  <ButtonComponent icon={faCopy} defaultText="Kopioi" {...props} />
+const IconButtonGreen = styled(({ icon, defaultText, ...props }) => (
+  <ButtonComponent icon={icon} defaultText={defaultText} {...props} />
 ))`
   background-color: ${props => (props.disabled ? '#ccc' : props.bgColor || '#4caf50')};
   
@@ -86,33 +67,12 @@ export const CopyButton = styled(props => (
   }
 `;
 
-export const ShareButton = styled(props => (
-  <ButtonComponent icon={faShare} defaultText="Kopioi" {...props} />
-))`
-  background-color: ${props => (props.disabled ? '#ccc' : props.bgColor || '#4caf50')};
-  &:hover {
-    background-color: ${props => (props.disabled ? '#ccc' : props.hoverBgColor || '#388e3c')};
-  }
-  &:active,
-  &:focus {
-    background-color: ${props => (props.disabled ? '#ccc' : props.bgColor || '#4caf50')};
-  }
-`;
-
-//TODO icon
-export const ImportButton = styled(props => (
-  <ButtonComponent defaultText="Kopioi" {...props} />
-))`
-  background-color: ${props => (props.disabled ? '#ccc' : props.bgColor || '#4caf50')};
-  &:hover {
-    background-color: ${props => (props.disabled ? '#ccc' : props.hoverBgColor || '#388e3c')};
-  }
-  &:active,
-  &:focus {
-    background-color: ${props => (props.disabled ? '#ccc' : props.bgColor || '#4caf50')};
-  }
-`;
-
+export const SaveButton = (props) => <IconButtonGreen icon={faSave} defaultText="Tallenna" {...props} />;
+export const OkButton = (props) => <IconButtonGreen icon={faCheck} defaultText="OK" {...props} />;
+export const CopyButton = (props) => <IconButtonGreen icon={faCopy} defaultText="Kopioi" {...props} />;
+export const PasteButton = (props) => <IconButtonGreen icon={faPaste} defaultText="Liitä" {...props} />;
+export const ShareButton = (props) => <IconButtonGreen icon={faShare} defaultText="Jaa" {...props} />;
+export const AddButton = (props) => <IconButtonGreen icon={faPlus} defaultText="" {...props} />;
 
 export const CancelButton = styled(props => (
   <ButtonComponent icon={faTimes} defaultText="Peruuta" {...props} />
@@ -144,18 +104,10 @@ export const DeleteButton = styled(props => (
   margin-left: auto;
 `;
 
-export const AddButton = styled(props => (
-  <ButtonComponent icon={faPlus} defaultText="" {...props} />
-))`
-  background-color: ${props => (props.disabled ? '#ccc' : '#4caf50')};
-  &:hover {
-    background-color: ${props => (props.disabled ? '#ccc' : '#388e3c')};
-  }
-`;
 
 export const HelpButton = styled(props => (
-    <ButtonComponent icon={faQuestion} defaultText="" {...props} />
-  ))`
+  <ButtonComponent icon={faQuestion} defaultText="" {...props} />
+))`
     background-color: #007BFF;
     &:hover {
       background-color: #0056b3;
@@ -181,16 +133,3 @@ export const PrimaryButton = styled(ButtonComponent)`
   }  
 `;
 
-export const SecondaryButton = styled(ButtonComponent)`
-  background-color: ${props => (props.disabled ? '#ccc' : '#6c757d')};
-  &:hover {
-    background-color: ${props => (props.disabled ? '#ccc' : '#5a6268')};
-  }
-`;
-
-export const DangerButton = styled(ButtonComponent)`
-  background-color: ${props => (props.disabled ? '#ccc' : '#dc3545')};
-  &:hover {
-    background-color: ${props => (props.disabled ? '#ccc' : '#c82333')};
-  }
-`;
