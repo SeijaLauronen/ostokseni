@@ -9,9 +9,10 @@ import StickyBottom from '../components/StickyBottom';
 import InputAdd from '../components/Input';
 import { AddButton } from '../components/Button';
 import Container, { IconContainer, IconWrapper } from '../components/Container';
-import { ProductItem } from '../components/Item';
-import { getCategories,getProducts, getProductById, addProduct,  updateProduct, deleteProduct } from '../controller';
-import Toast from '../components/Toast'; 
+//import { ProductItem } from '../components/Item';
+import { getCategories, getProducts, getProductById, addProduct, updateProduct, deleteProduct } from '../controller';
+import Toast from '../components/Toast';
+import ProductItemComponent from '../components/ProductItemComponent';
 
 const Products = ({ refresh = false, categoryId }) => {
 
@@ -19,6 +20,7 @@ const Products = ({ refresh = false, categoryId }) => {
   const [categories, setCategories] = useState([]);
   const [newProduct, setNewProduct] = useState('');
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editingProductAmount, setEditingProductAmount] = useState(false);;
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [filter, setFilter] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId); //Lisäsin tämän
@@ -27,6 +29,7 @@ const Products = ({ refresh = false, categoryId }) => {
   const [showFavorites, setShowFavorites] = useState(false);
   const [error, setError] = useState('');
   const [handledProductId, setHandledProductId] = useState(null); // ID of the newly added or edited product
+  const [isShopLongPress, setIsShopLongPress] = useState(false);
 
   const productRefs = useRef({}); // Ref object to hold references to product items
 
@@ -81,15 +84,17 @@ const Products = ({ refresh = false, categoryId }) => {
   const handleEditProduct = (product) => {
     // Tyhjätään skrollauspiste, jos oli aiemmin lisätty tuote. 
     // Ei aseteta uutta skrollauspistettä editissä, koska on jo valmiiksi vieritetyssä kohdassa
-    setHandledProductId(null); 
+    setHandledProductId(null);
     setEditingProduct(product);
   };
 
   const handleSaveProduct = async (id, updatedProduct) => {
+    setEditingProductAmount(false);
     try {
       await updateProduct(id, updatedProduct);
       fetchAndSetProductsAndCategories();
       setEditingProduct(null);
+      setEditingProductAmount(false);
     } catch (err) {
       setError(err.message);
     }
@@ -100,12 +105,13 @@ const Products = ({ refresh = false, categoryId }) => {
       await deleteProduct(id);
       fetchAndSetProductsAndCategories();
       setEditingProduct(null);
-    }  catch (err) {
+      setEditingProductAmount(false);
+    } catch (err) {
       setError(err.message);
     }
   };
 
-  
+
   const handleShowByCategory = () => {
     setShowByCategory(!showByCategory);
     setError(null);
@@ -124,8 +130,8 @@ const Products = ({ refresh = false, categoryId }) => {
     setError(null);
   };
 
-  
-  const offset = 400; 
+
+  const offset = 400;
 
   const scrollToFirstMatchingProduct = (filter) => {
     if (filter === '') return;
@@ -136,14 +142,14 @@ const Products = ({ refresh = false, categoryId }) => {
     if (firstMatchingProduct && productRefs.current[firstMatchingProduct.id]) {
       const element = productRefs.current[firstMatchingProduct.id];
       const elementPosition = element.getBoundingClientRect().top;
-        
+
       // Dynaaminen offset, koska näppäimistö vie tilaa. visualViewport ei sisällä on-screen näppäimistöä
-      const newOffset = window.visualViewport ? window.visualViewport.height / 2 : offset; 
+      const newOffset = window.visualViewport ? window.visualViewport.height / 2 : offset;
       //const offsetPosition = elementPosition + window.scrollY - newOffset; // ei toimi toivotusti 
       const offsetPosition = elementPosition + window.scrollY - offset;
-      
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });      
-      
+
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+
     }
   };
 
@@ -159,6 +165,45 @@ const Products = ({ refresh = false, categoryId }) => {
       console.error('Error toggling favorite:', err);
       setError(err.message);
     }
+  };
+
+
+  const timerRef = useRef(null);
+  const handleShoppingListPress = (e, product) => {
+    e.preventDefault();
+    //Mobiililaitteella seuraavan rivin teksti maalautui
+    e.stopPropagation(); // Estetään tapahtuman leviäminen muihin elementteihin. 
+    timerRef.current = setTimeout(() => {
+      setIsShopLongPress(true);
+    }, 500); // 500ms on aika, jota pidetään "pitkänä painalluksena"    
+  }
+
+  const handleShoppingListRelease = (e, product) => {
+
+    e.preventDefault();
+    //Mobiililaitteella seuraavan rivin teksti maalautui
+    e.stopPropagation(); // Estetään tapahtuman leviäminen muihin elementteihin. 
+    if (!isShopLongPress) {
+      handleToggleShoppingList(product.id); // Yhden klikkauksen tai napautuksen toiminta
+    } else {
+      product.onShoppingList = true;
+      setEditingProduct(product);
+      setEditingProductAmount(true);
+    }
+    // Tyhjennä pitkän painalluksen ajastin ja tilat
+    clearTimeout(timerRef.current);
+    setIsShopLongPress(false);
+  }
+
+  // Estä oletustoiminta touchmove- ja contextmenu-tapahtumissa
+  const handleTouchMove = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  const handleContextMenu = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const handleToggleShoppingList = async (id) => {
@@ -209,7 +254,7 @@ const Products = ({ refresh = false, categoryId }) => {
   };
 
   const sortedProducts = () => {
-  
+
     let sorted = [...products];
     if (showFavorites) {
       sorted = sorted.filter(product => product.isFavorite);
@@ -237,10 +282,10 @@ const Products = ({ refresh = false, categoryId }) => {
 
   const highlightText = (text, highlight) => {
     if (!highlight) return text;
-  
+
     const regex = new RegExp(`(${highlight})`, 'gi');
     const parts = text.split(regex);
-  
+
     return parts.map((part, index) =>
       part.toLowerCase() === highlight.toLowerCase() ? (
         <span key={index} style={{ backgroundColor: 'yellow' }}>
@@ -256,23 +301,25 @@ const Products = ({ refresh = false, categoryId }) => {
   // EditProductForm ei ole styled komponentti, ei käytetä transienttia propsia
   return (
     <>
-      { error && (
+      {error && (
         <Toast message={error} onClose={() => setError('')} />
       )}
 
-      {editingProduct && (
+
+      {(editingProduct) && (
         <EditProductForm
           product={editingProduct}
           onSave={handleSaveProduct}
-          onCancel={() => setEditingProduct(null)}
+          onCancel={() => { setEditingProduct(null); setEditingProductAmount(false); }}
           onDelete={handleDeleteProduct}
           isOpen={editingProduct}
+          editAmount={editingProductAmount}
         />
       )}
       <Container $isEditFormOpen={editingProduct}>
         <StickyTop>
-            <b>{selectedCategoryName && `${selectedCategoryName}:`}Tuotteet</b>
-            <div>
+          <b>{selectedCategoryName && `${selectedCategoryName}:`}Tuotteet</b>
+          <div>
             {!selectedCategoryId && (
               <label>
                 <input
@@ -281,104 +328,77 @@ const Products = ({ refresh = false, categoryId }) => {
                   onChange={handleShowByCategory}
                 />
                 Kategorioittain
-              </label>              
+              </label>
             )}
-              <IconWrapper onClick={handleShowFavorites}>
-              <FontAwesomeIcon 
-                icon={showFavorites ? faStarSolid : faStarRegular} 
-                style={{ color: showFavorites ? 'gold' : 'gray' }} 
+            <IconWrapper onClick={handleShowFavorites}>
+              <FontAwesomeIcon
+                icon={showFavorites ? faStarSolid : faStarRegular}
+                style={{ color: showFavorites ? 'gold' : 'gray' }}
               />
-              </IconWrapper>
-            </div>            
-          </StickyTop>                
-          
-          {showByCategory ? (
-            groupedProducts              
-              .filter(category => selectedCategoryId === null || category.id === selectedCategoryId)
-              .map(category => (
-                expandedCategories.has(category.id) && (
-                  <Accordion key={category.id} title={category.name} defaultExpanded={expandedCategories.has(category.id)}>                    
-                        <div>
-                          {displayedProducts(category).map((product, index) => (                                                          
-                                <ProductItem 
-                                  key={product.id}                                
-                                  ref={(el) => productRefs.current[product.id] = el}                                 
-                                >
-                                  <span>{highlightText(product.name, filter)}</span>
-                                  <div>
-                                    <IconContainer>
-                                      <IconWrapper onClick={() => handleEditProduct(product)}>
-                                        <FontAwesomeIcon icon={faEdit} />
-                                      </IconWrapper>
-                                      <IconWrapper onClick={() => handleToggleFavorite(product.id)}>
-                                        <FontAwesomeIcon
-                                          icon={product.isFavorite ? faStarSolid : faStarRegular}
-                                          style={{ color: product.isFavorite ? 'gold' : 'gray' }}
-                                        />
-                                      </IconWrapper>
-                                      <IconWrapper onClick={() => handleToggleShoppingList(product.id)}>
-                                        <FontAwesomeIcon
-                                          icon={faShoppingCart}
-                                          style={{ color: product.onShoppingList ? 'green' : 'lightgrey' }}
-                                        />
-                                      </IconWrapper>
-                                    </IconContainer>
-                                  </div>
-                                </ProductItem>
-                             
-                          ))}
-                          
-                        </div>
-                      
-                  </Accordion>
-                )
-              ))
-          ) : (                          
-                <div>
-                  {sortedProducts().map((product, index) => (                    
-                        <ProductItem 
-                          key={product.id}                           
-                          ref={(el) => productRefs.current[product.id] = el}                          
-                        >
-                          <span>{highlightText(product.name, filter)}</span>
-                          <div>
-                            <IconContainer>
-                              <IconWrapper onClick={() => handleEditProduct(product)}>
-                                <FontAwesomeIcon icon={faEdit} />
-                              </IconWrapper>
-                              <IconWrapper onClick={() => handleToggleFavorite(product.id)}>
-                                <FontAwesomeIcon
-                                  icon={product.isFavorite ? faStarSolid : faStarRegular}
-                                  style={{ color: product.isFavorite ? 'gold' : 'gray' }}
-                                />
-                              </IconWrapper>
-                              <IconWrapper onClick={() => handleToggleShoppingList(product.id)}>
-                                <FontAwesomeIcon
-                                  icon={faShoppingCart}
-                                  style={{ color: product.onShoppingList ? 'green' : 'lightgrey' }}
-                                />
-                              </IconWrapper>
-                            </IconContainer>
-                          </div>
-                        </ProductItem>                      
-                  ))}                  
-                </div>                          
-          )}        
+            </IconWrapper>
+          </div>
+        </StickyTop>
+
+        {showByCategory ? (
+          groupedProducts
+            .filter(category => selectedCategoryId === null || category.id === selectedCategoryId)
+            .map(category => (
+              expandedCategories.has(category.id) && (
+                <Accordion key={category.id} title={category.name} defaultExpanded={expandedCategories.has(category.id)}>
+                  <div>
+                    {displayedProducts(category).map((product, index) => (
+                      <ProductItemComponent
+                        key={product.id}
+                        product={product}
+                        ref={(el) => (productRefs.current[product.id] = el)}
+                        highlightText={highlightText}
+                        filter={filter}
+                        handleEditProduct={handleEditProduct}
+                        handleToggleFavorite={handleToggleFavorite}
+                        handleShoppingListPress={handleShoppingListPress}
+                        handleShoppingListRelease={handleShoppingListRelease}
+                      />
+                    ))}
+
+                  </div>
+
+                </Accordion>
+              )
+            ))
+        ) : (
+          <div>
+            {sortedProducts().map((product, index) => (
+              <ProductItemComponent
+                key={product.id}
+                product={product}
+                ref={(el) => (productRefs.current[product.id] = el)}
+                highlightText={highlightText}
+                filter={filter}
+                handleEditProduct={handleEditProduct}
+                handleToggleFavorite={handleToggleFavorite}
+                handleShoppingListPress={handleShoppingListPress}
+                handleShoppingListRelease={handleShoppingListRelease}
+                handleTouchMove={handleTouchMove}
+                handleContextMenu={handleContextMenu}
+              />              
+            ))}
+          </div>
+        )}
       </Container>
       <StickyBottom>
-                
+
         <IconWrapper >
           {newProduct ? (
-          <FontAwesomeIcon onClick={handleClearFilter}
-          icon={faTimes}
-          />
+            <FontAwesomeIcon onClick={handleClearFilter}
+              icon={faTimes}
+            />
           ) : (
-          <FontAwesomeIcon 
-          icon={faMagnifyingGlass } 
-          />
+            <FontAwesomeIcon
+              icon={faMagnifyingGlass}
+            />
           )}
         </IconWrapper>
-        
+
         <InputAdd
           type="text"
           value={newProduct}

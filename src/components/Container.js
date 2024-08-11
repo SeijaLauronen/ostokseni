@@ -57,11 +57,12 @@ export const IconContainer = styled.span`
 `;
 
 export const IconWrapper = styled.span`
-  margin-left: 20px;
+  margin-left: 10px;
   margin-right: 10px;
   margin-top: 10px;
-  padding: 0px 10px;
+  padding: 0px 4px;
   cursor: pointer;
+  user-select: none; // Estää tekstin valinnan 
   //background-color: blue;
   @media (min-width: 300px) {   
     margin-top: 0px;
