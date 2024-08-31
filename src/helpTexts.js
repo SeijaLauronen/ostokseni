@@ -13,7 +13,7 @@ const helpTexts = {
 
       <b>Kategoriat</b>
       <p>
-        Voit lisätä mieleisiäsi kategorioita, kuten Hedelemät, Vihannekset, Leivät jne.
+        Voit lisätä mieleisiäsi kategorioita, kuten Hedelmät, Vihannekset, Leivät jne.
       </p><p>
         Voit muuttaa kategogorioiden järjestystä raahaamalla kategorian sopivaan kohtaan.
       </p><p>
@@ -44,6 +44,9 @@ const helpTexts = {
       </p>
       <p>
         Klikkaamalla <b>ostoskorin</b> kuvaa voit asettaa tuotteen ostoslistalle tai pois sieltä. <b>Pitkä painallus</b> avaa lomakkeen, jolla voit antaa määrän.
+      </p>
+      <p>
+        Voit suodattaa tuotteita <b>väreittäin</b>. Menun asetuksista voi säätää, käytetäänkö tuotteilla värikoodeja. Tuotteelle voit valita värit ja tuotesivun yläpalkin suodattimesta voi valita näkyviin haluamasi värit/värittömät ja poistaa valinnat klikkaamalla suodattimen kuvaa. 
       </p>
     </>
   ),

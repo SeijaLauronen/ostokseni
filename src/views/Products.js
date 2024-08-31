@@ -1,18 +1,26 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faShoppingCart, faStar as faStarSolid, faTimes, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faStar as faStarSolid, faTimes, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons';
 import EditProductForm from './forms/EditProductForm';
 import Accordion from '../components/Accordion';
-import StickyTop from '../components/StickyTop';
+import { ProductStickyTop } from '../components/StickyTop';
 import StickyBottom from '../components/StickyBottom';
 import InputAdd from '../components/Input';
 import { AddButton } from '../components/Button';
-import Container, { IconContainer, IconWrapper } from '../components/Container';
-//import { ProductItem } from '../components/Item';
+import Container, { ProductContainer, IconWrapper } from '../components/Container';
 import { getCategories, getProducts, getProductById, addProduct, updateProduct, deleteProduct } from '../controller';
 import Toast from '../components/Toast';
 import ProductItemComponent from '../components/ProductItemComponent';
+import { useColors } from '../ColorContext';
+import { ColorItemsWrapper, ColorItemContainer, ColorItemSelection } from '../components/ColorItem';
+import { useSettings } from '../SettingsContext';
+import FilterWithCrossIcon from '../components/FilterIcon';
+import SwitchButtonComponent from '../components/SwitchButtonCompnent';
+
+// TODO kun tekee refresh ja menee tuotesivulle, tulee (filteri-ikonista?):
+// Received `false` for a non-boolean attribute `enabled`.
+// If you want to write it to the DOM, pass a string instead: enabled="false" or enabled={value.toString()}.
 
 const Products = ({ refresh = false, categoryId }) => {
 
@@ -30,6 +38,10 @@ const Products = ({ refresh = false, categoryId }) => {
   const [error, setError] = useState('');
   const [handledProductId, setHandledProductId] = useState(null); // ID of the newly added or edited product
   const [isShopLongPress, setIsShopLongPress] = useState(false);
+  const { colorCodingEnabled } = useSettings();
+
+  const { colors, selectedColors, toggleColor, setSelectedColors } = useColors(); //Hook For filtering in Products
+  const noColor = { code: '#e1f5eb', name: 'NoColor' }; // Taustan värinen
 
   const productRefs = useRef({}); // Ref object to hold references to product items
 
@@ -144,7 +156,7 @@ const Products = ({ refresh = false, categoryId }) => {
       const elementPosition = element.getBoundingClientRect().top;
 
       // Dynaaminen offset, koska näppäimistö vie tilaa. visualViewport ei sisällä on-screen näppäimistöä
-      const newOffset = window.visualViewport ? window.visualViewport.height / 2 : offset;
+      //const newOffset = window.visualViewport ? window.visualViewport.height / 2 : offset;
       //const offsetPosition = elementPosition + window.scrollY - newOffset; // ei toimi toivotusti 
       const offsetPosition = elementPosition + window.scrollY - offset;
 
@@ -245,11 +257,33 @@ const Products = ({ refresh = false, categoryId }) => {
     });
   }
 
+  // TODO, debugatessa: Products.js:257 Warning: Cannot update during an existing state transition (such as within `render`). 
+  // Render methods should be a pure function of props and state.
   const displayedProducts = (category) => {
     let filteredProducts = category.products;
     if (showFavorites) {
       filteredProducts = filteredProducts.filter(product => product.isFavorite);
     }
+
+    // Suodata väreillä
+    return colorFilteredProducts(filteredProducts);
+  };
+
+  const colorFilteredProducts = (products) => {
+    let filteredProducts = products;
+
+    if (selectedColors.length > 0 && colorCodingEnabled) {
+      filteredProducts = filteredProducts.filter(product => {
+        // Tarkista, onko tuote värikoodien joukossa tai onko se ilman värikoodia
+        const hasSelectedColor = Object.keys(colors).some(colorKey =>
+          product[colorKey] && selectedColors.includes(colorKey)
+        );
+        const noColorSelected = selectedColors.includes('noColor') && !Object.keys(colors).some(colorKey => product[colorKey]);
+
+        return hasSelectedColor || noColorSelected;
+      });
+    }
+
     return filteredProducts;
   };
 
@@ -297,6 +331,20 @@ const Products = ({ refresh = false, categoryId }) => {
     );
   };
 
+
+  const handleFilterClick = () => {
+    if (selectedColors.length > 0) {
+      setSelectedColors([]); // Tyhjentää värivalinnat
+    }
+  };
+
+
+  const MyContainer = (props) => {
+    return colorCodingEnabled ?
+      <ProductContainer {...props} /> :
+      <Container {...props} />;
+  };
+
   // transientti props eli is"Jotain" edessä käytetään $ ettei välity DOM:lle
   // EditProductForm ei ole styled komponentti, ei käytetä transienttia propsia
   return (
@@ -316,19 +364,24 @@ const Products = ({ refresh = false, categoryId }) => {
           editAmount={editingProductAmount}
         />
       )}
-      <Container $isEditFormOpen={editingProduct}>
-        <StickyTop>
-          <b>{selectedCategoryName && `${selectedCategoryName}:`}Tuotteet</b>
-          <div>
+
+      <MyContainer $isEditFormOpen={editingProduct}>
+        <ProductStickyTop $showFilterRow={colorCodingEnabled}>
+          <div className='topHeader'>
+            <b>{selectedCategoryName && `${selectedCategoryName}:`}Tuotteet</b>
+
             {!selectedCategoryId && (
-              <label>
-                <input
-                  type="checkbox"
+
+              <div className="category-switch">
+                <label>
+                  Kategoriat
+                </label>
+                <SwitchButtonComponent
                   checked={showByCategory}
                   onChange={handleShowByCategory}
                 />
-                Kategorioittain
-              </label>
+              </div>
+
             )}
             <IconWrapper onClick={handleShowFavorites}>
               <FontAwesomeIcon
@@ -337,7 +390,43 @@ const Products = ({ refresh = false, categoryId }) => {
               />
             </IconWrapper>
           </div>
-        </StickyTop>
+
+          {colorCodingEnabled && (
+            <div className='filter-row'>
+
+              <FilterWithCrossIcon
+                $filterEnabled={selectedColors.length > 0}
+                onClick={handleFilterClick}
+              />
+              <ColorItemsWrapper className='CIWrapper'>
+                {Object.keys(colors).map(colorKey => (
+                  <ColorItemContainer key={colorKey} className='CIContainer'>
+                    <ColorItemSelection
+                      className='CISelection'
+                      color={colors[colorKey]}
+                      selected={selectedColors.includes(colorKey)}
+                      onClick={() => toggleColor(colorKey)}
+                    >
+                    </ColorItemSelection>
+                  </ColorItemContainer>
+                ))}
+
+                <ColorItemContainer className='CIContainer'>
+                  <ColorItemSelection
+                    className='CISelection'
+                    color={noColor}
+                    selected={selectedColors.includes('noColor')}
+                    onClick={() => toggleColor('noColor')}
+                  >
+                  </ColorItemSelection>
+                </ColorItemContainer>
+
+
+              </ColorItemsWrapper>
+            </div>
+          )}
+
+        </ProductStickyTop>
 
         {showByCategory ? (
           groupedProducts
@@ -357,6 +446,8 @@ const Products = ({ refresh = false, categoryId }) => {
                         handleToggleFavorite={handleToggleFavorite}
                         handleShoppingListPress={handleShoppingListPress}
                         handleShoppingListRelease={handleShoppingListRelease}
+                        colors={colors}
+                        selectedColors={selectedColors}
                       />
                     ))}
 
@@ -367,7 +458,7 @@ const Products = ({ refresh = false, categoryId }) => {
             ))
         ) : (
           <div>
-            {sortedProducts().map((product, index) => (
+            {colorFilteredProducts(sortedProducts()).map((product, index) => (
               <ProductItemComponent
                 key={product.id}
                 product={product}
@@ -380,11 +471,13 @@ const Products = ({ refresh = false, categoryId }) => {
                 handleShoppingListRelease={handleShoppingListRelease}
                 handleTouchMove={handleTouchMove}
                 handleContextMenu={handleContextMenu}
-              />              
+                colors={colors}
+                selectedColors={selectedColors}
+              />
             ))}
           </div>
         )}
-      </Container>
+      </MyContainer>
       <StickyBottom>
 
         <IconWrapper >

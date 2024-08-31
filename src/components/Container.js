@@ -1,22 +1,25 @@
-import styled from 'styled-components'; 
+import styled from 'styled-components';
 
 
 //DOM-elementtiin liittyvä styled-component: Käytetään transientteja propseja, eli $ "isJotain" eteen, jotta ne eivät välity tuntemattomina DOM:lle
+// TODO tarkista poikkeus isPrintOpen
 const Container = styled.div`
   padding: 55px 5px;
   opacity: ${({ $isMenuOpen, $isCategoryFormOpen, $isEditFormOpen, isPrintOpen }) => ($isMenuOpen || $isCategoryFormOpen || $isEditFormOpen || isPrintOpen ? 0.5 : 1)};
   pointer-events: ${({ $isMenuOpen, $isCategoryFormOpen, $isEditFormOpen, isPrintOpen }) => ($isMenuOpen || $isCategoryFormOpen || $isEditFormOpen || isPrintOpen ? 'none' : 'auto')};
   transition: opacity 0.3s ease-in-out;
-  //background-color: green;
 `;
 export default Container;
 
+// Lisää tilaa ylös, koska värifiltteri mahdollinen
+export const ProductContainer = styled(Container)`
+  padding-top: 90px;
+`;
 
 export const FormContainer = styled.div`
 padding: 20px;
 background-color: #fff;
 margin: 20px 0;
-//background-color: blue;
 `;
 
 export const ScrollableFormContainer = styled(FormContainer)`
@@ -50,7 +53,7 @@ export const IconContainer = styled.span`
   display: inline-flex;
   flex-direction: column;
   //background-color: yellow;
-  padding: 10px 0px;
+  padding: 5px 0px 5px 10px;
   @media (min-width: 300px) {
     flex-direction: row;    
   }
@@ -59,7 +62,7 @@ export const IconContainer = styled.span`
 export const IconWrapper = styled.span`
   margin-left: 10px;
   margin-right: 10px;
-  margin-top: 10px;
+  margin-top: 10px;  
   padding: 0px 4px;
   cursor: pointer;
   user-select: none; // Estää tekstin valinnan 

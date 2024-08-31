@@ -8,8 +8,10 @@ import { GroupRight } from './Container';
 import DataManagement from '../DataManagement';
 import { getBrowserName } from '../utils/browserUtils';
 import DeviceInfo from './DeviceInfo';
+import { useSettings } from '../SettingsContext';
+import SwitchButtonComponent from './SwitchButtonCompnent';
 
-const programVersion = '2024-08-11: 1.194';
+const programVersion = '2024-08-31: 1.209';
 
 const MenuContainer = styled.div`
   position: fixed;
@@ -101,18 +103,18 @@ const MenuHeader = styled.h3`
   border-bottom: 1px solid #ddd;
 `;
 
-
-
 //Huom tähän ei transienttia $isOpenia, koska ei ole styled komponentti
 const Menu = ({ onDatabaseCleared, isOpen, onToggleMenu, onOpenInfo }) => {
-  
+
+  const { colorCodingEnabled, toggleColorCoding } = useSettings();
+
+
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   //const [infoMessage, setInfoMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState(null);
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [dataManagementAction, setDataManagementAction] = useState('');
 
-  //TODO INFO ei tällä hetkellä käytössä, mutta jätetään se vielä
   const handleOpenInfo = (message) => {
     setInfoMessage(message);
     setIsInfoOpen(true);
@@ -122,28 +124,26 @@ const Menu = ({ onDatabaseCleared, isOpen, onToggleMenu, onOpenInfo }) => {
     setIsInfoOpen(false);
   };
 
-  const toggleMenu = () => {    
+  const toggleMenu = () => {
     onToggleMenu(!isOpen);
   };
 
   const handleOpenDataManagement = (action) => {
     setShowDataManagement(true);
-    setDataManagementAction(action);
+    setDataManagementAction(action);    
     //onToggleMenu(false); // Suljetaan menu kun data management aukeaa
   };
 
   const handleCloseDataManagement = (refresh) => {
     setShowDataManagement(false);
-    setDataManagementAction('');    
-    
-    if (refresh) {         
+    setDataManagementAction('');
+
+    if (refresh) {
       onDatabaseCleared(); // refresh kutsu App.js:lle
       onToggleMenu(false);
     }
   };
 
-        
- 
   // transientti props eli is"Jotain" edessä käytetään $ ettei välity DOM:lle, esim $isOpen
   // tai käytetään pieniä kirjaimia kuten fillspace eikä fillSpace
   return (
@@ -151,29 +151,47 @@ const Menu = ({ onDatabaseCleared, isOpen, onToggleMenu, onOpenInfo }) => {
       <MenuContainer>
         <MenuIcon onClick={toggleMenu}>
           <FontAwesomeIcon icon={faBars} />
-        </MenuIcon> 
-        <GroupRight><MenuHelpButton onClick={onOpenInfo}/> </GroupRight>       
+        </MenuIcon>
+        <GroupRight><MenuHelpButton onClick={onOpenInfo} /> </GroupRight>
       </MenuContainer>
       <MenuOverlay $isOpen={isOpen} onClick={toggleMenu} />
       <MenuList $isOpen={isOpen}>
-        <CloseButtonComponent onClick={toggleMenu}/>        
-        <MenuHeader>Toiminnot</MenuHeader>        
-        <MenuItem onClick={() => handleOpenDataManagement('load')}>Lataa esimerkkiaineisto<ChevronIcon/></MenuItem>
-        <MenuItem onClick={() => handleOpenDataManagement('export')}>Varmuuskopioi / Vie tiedot<ChevronIcon/></MenuItem>
-        <MenuItem onClick={() => handleOpenDataManagement('import')}>Palauta / Tuo tiedot<ChevronIcon/></MenuItem>                
-        <MenuItem onClick={() => handleOpenDataManagement('delete')}>Poista tiedot<ChevronIcon/></MenuItem>
-        <MenuHeader>Tietoja</MenuHeader>  
+        <CloseButtonComponent onClick={toggleMenu} />
+        <MenuHeader>Toiminnot</MenuHeader>
+        <MenuItem onClick={() => handleOpenDataManagement('load')}>Lataa esimerkkiaineisto<ChevronIcon /></MenuItem>
+        <MenuItem onClick={() => handleOpenDataManagement('export')}>Varmuuskopioi / Vie tiedot<ChevronIcon /></MenuItem>
+        <MenuItem onClick={() => handleOpenDataManagement('import')}>Palauta / Tuo tiedot<ChevronIcon /></MenuItem>
+        <MenuItem onClick={() => handleOpenDataManagement('delete')}>Poista tiedot<ChevronIcon /></MenuItem>
+        <MenuHeader>Asetukset</MenuHeader>
+        <MenuItemText>
+          <label>
+            Värikoodit käytössä
+          </label>
+          <SwitchButtonComponent
+            checked={colorCodingEnabled}
+            onChange={toggleColorCoding}
+            /*
+            onColor="#00ff00"
+            offColor="#ff0000"
+            onHandleColor="#0000ff"
+            offHandleColor="#ffffff"
+            */
+          />
+        </MenuItemText>
+        <MenuHeader>Tietoja</MenuHeader>
         <MenuItemText>Sovellus: Ostokseni</MenuItemText>
-        <MenuItemText>Versio: {programVersion}</MenuItemText>                
-        <MenuItem onClick={() => handleOpenInfo(<DeviceInfo></DeviceInfo>)}>Selaimesi: {getBrowserName()} <ChevronIcon /></MenuItem>                
+        <MenuItemText>Versio: {programVersion}</MenuItemText>
+        <MenuItem onClick={() => handleOpenInfo(<DeviceInfo></DeviceInfo>)}>Selaimesi: {getBrowserName()} <ChevronIcon /></MenuItem>
       </MenuList>
       <Info isOpen={isInfoOpen} onCancel={handleCloseInfo}>
         {infoMessage}
       </Info>
-      <DataManagement 
-        isOpen={showDataManagement}  
-        action={dataManagementAction} 
-        onClose={handleCloseDataManagement} 
+
+
+      <DataManagement
+        isOpen={showDataManagement}
+        action={dataManagementAction}
+        onClose={handleCloseDataManagement}
       />
 
     </>
