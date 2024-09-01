@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/ostokseni/static/css/main.e6c13ad2.css",
-    "main.js": "/ostokseni/static/js/main.f0ea8d5d.js",
+    "main.js": "/ostokseni/static/js/main.502b64ce.js",
     "index.html": "/ostokseni/index.html",
     "main.e6c13ad2.css.map": "/ostokseni/static/css/main.e6c13ad2.css.map",
-    "main.f0ea8d5d.js.map": "/ostokseni/static/js/main.f0ea8d5d.js.map"
+    "main.502b64ce.js.map": "/ostokseni/static/js/main.502b64ce.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.f0ea8d5d.js"
+    "static/js/main.502b64ce.js"
   ]
 }
