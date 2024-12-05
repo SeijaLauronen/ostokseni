@@ -15,7 +15,7 @@ const helpTexts = {
       <p>
         Voit lisätä mieleisiäsi kategorioita, kuten Hedelmät, Vihannekset, Leivät jne.
       </p><p>
-        Voit muuttaa kategorioiden järjestystä raahaamalla kategorian sopivaan kohtaan.
+        Voit muuttaa kategogorioiden järjestystä raahaamalla kategorian sopivaan kohtaan.
       </p><p>
         Tuotteet -sivulle pääset joko alavalikosta tai kategorian nuolipainikkeesta.
         Jos menet nuolipainikkeesta, Tuote-sivulla näytetään vain sen kategorian tuotteet ja uusi tuote lisätään kyseiseen kategoriaan.

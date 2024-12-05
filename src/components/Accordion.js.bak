@@ -28,38 +28,20 @@ const AccordionContent = styled.div`
   display: ${({ $isOpen }) => ($isOpen ? 'block' : 'none')};
 `;
 
-//Huom! ei tarvitse antaa kaikkia propseja!! Erilainen kuin funktio. Esim colorItem voi puuttua
-const Accordion = ({ title, colorItem, icons, children, defaultExpanded = false, isOpenExternally = null }) => {
+const Accordion = ({ title, children, defaultExpanded = false }) => {
   const [isOpen, setIsOpen] = useState(defaultExpanded);
 
-  useEffect(() => {
-    if (isOpenExternally !== null) {
-      //setIsOpen(isOpenExternally);
-      setIsOpen(true);
-    }
-  }, [isOpenExternally]);
-
-
   const toggleAccordion = () => {
-    // Jos accordion avattiin ulkoisesti, annetaan käyttäjän hallita
-    //if (isOpenExternally === null) {
-      setIsOpen(!isOpen); // Toggle manuaalisesti käyttäjän toimesta
-    //}
+    setIsOpen(!isOpen);
   };
 
   return (
     <AccordionWrapper>
       <AccordionTitle onClick={toggleAccordion}>
-        <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}> {/* Vie lopun käytettävissä olevan tilan, jolloin muut pysyy oikeassa laidassa*/}
-          {colorItem}
-          <span style={{ marginLeft: '10px' }}>{title}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>{/* Justify oikeaan reunaan */}
-          {icons}
-        </div>
-        <span>
-          <FontAwesomeIcon style={{ marginLeft: '10px' }} icon={isOpen ? faChevronUp : faChevronDown} />
-        </span>
+        {title}
+        <span>          
+          <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} />
+          </span>
       </AccordionTitle>
       <AccordionContent $isOpen={isOpen}>{children}</AccordionContent>
     </AccordionWrapper>

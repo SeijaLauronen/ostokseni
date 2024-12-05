@@ -1,24 +1,37 @@
 import { openDB } from 'idb';
 
 const DB_NAME = 'OstokseniDB';
-const DB_VERSION = 1;
-const STORE_NAMES = ['categories', 'products']; 
+const DB_VERSION = 2;
+const STORE_NAMES = ['categories', 'products', 'colordefinitions']; // M‰‰rit‰ taulujen nimet
 
 const initDB = async () => {
-  return openDB(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains('categories')) {
-        db.createObjectStore('categories', { keyPath: 'id', autoIncrement: true });
-      }
-      if (!db.objectStoreNames.contains('products')) {
-        db.createObjectStore('products', { keyPath: 'id', autoIncrement: true });
-      }
-    },
-  });
+  try {
+    return openDB(DB_NAME, DB_VERSION, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains('categories')) {
+          db.createObjectStore('categories', { keyPath: 'id', autoIncrement: true });
+        }
+        if (!db.objectStoreNames.contains('products')) {
+          db.createObjectStore('products', { keyPath: 'id', autoIncrement: true });
+        }        
+        // versio 2:
+        if (!db.objectStoreNames.contains('colordefinitions')) {
+          db.createObjectStore('colordefinitions', { keyPath: 'colorId' }); //k‰ytet‰‰n id:n‰ c1,c2, black jne
+        }
+      },
+    });
+  } catch (error) {
+    console.error("Failed to initialize database:", error);
+    throw error;
+  }
 };
 
 export const getDB = async () => {
-  const db = await initDB();
-  return db;
+  try {
+    const db = await initDB();
+    return db;
+  } catch (error) {
+    console.error("Failed to get database instance:", error);    
+    throw error;// Voit heitt‰‰ virheen uudelleen tai palauttaa jotakin muuta, kuten null, tilanteen mukaan
+  }
 };
-
