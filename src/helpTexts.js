@@ -46,7 +46,10 @@ const helpTexts = {
         Klikkaamalla <b>ostoskorin</b> kuvaa voit asettaa tuotteen ostoslistalle tai pois sieltä. <b>Pitkä painallus</b> avaa lomakkeen, jolla voit antaa määrän.
       </p>
       <p>
-        Voit suodattaa tuotteita <b>väreittäin</b>. Menun asetuksista voi säätää, käytetäänkö tuotteilla värikoodeja. Tuotteelle voit valita värit ja tuotesivun yläpalkin suodattimesta voi valita näkyviin haluamasi värit/värittömät ja poistaa valinnat klikkaamalla suodattimen kuvaa. 
+        Voit suodattaa tuotteita <b>väreittäin</b>. Menun asetuksista voi säätää, käytetäänkö tuotteilla värikoodeja. 
+        Halutessasi voit määritellä väreille merkitykset menun valikosta "Värien määrittely".
+        Tuotteelle voit valita värit ja tuotesivun yläpalkin suodattimesta voi valita näkyviin haluamasi värit/värittömät 
+        ja poistaa valinnat klikkaamalla suodattimen kuvaa. 
       </p>
     </>
   ),

@@ -12,6 +12,7 @@ import Info from '../components/Info';
 import Toast from '../components/Toast';
 import DisabledOverlay from '../components/DisabledOverlay';
 import { importShoppinglistData } from '../utils/dataUtils';
+import { useSettings } from '../SettingsContext';
 
 const ShoppingList = ({ refresh = false, isMenuOpen }) => {
   const [products, setProducts] = useState([]); //ostolistalla olevat tuotteet
@@ -25,6 +26,7 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
   const [error, setError] = useState('');
   const [shoppingListText, setShoppingListText] = useState('');
   const [importText, setImportText] = useState('');
+  const {keepQuantityEnabled } = useSettings();
   const noCategoryName = "Ei kategoriaa";
 
   const handleOpenInfo = (message) => {
@@ -118,7 +120,8 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
       const updatedProducts = selectedProductsArray.map(product => ({
         ...product,
         onShoppingList: false,
-        selected: false
+        selected: false,
+        quantity: keepQuantityEnabled? product.quantity : ""
       }));
 
       await updateProducts(updatedProducts);
@@ -253,10 +256,23 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
                   <span>{product.name}</span>
                   <InputWrapper>
                     <InputQuantity
+                      lang="fi-FI"  //jotta hyväksyy pisteen puhelimen näppikseltä
                       disabled={isPrintOpen}
-                      type="number"
+                      type="text" //"number" ei hyväksy pistettä, siksi laitetaan text
+                      inputMode="decimal"  // tällä saadaan kuitenkin numeronäppäimistö mobiilissa
+                      step="any" //vaihtoehtoisesti voidaan laittaa tämä, niin hyväksyy desimaalit (?)
+                      min="0"
                       value={product.quantity || ''}
-                      onChange={(e) => handleQuantityChange(product.id, e.target.value)}
+                      onChange={(e) => {
+                        let value = e.target.value;
+                        if (/^[0-9]*[.,]?[0-9]*$/.test(value)) {
+                          // ei toimi... 
+                          //const value = e.target.value.replace('.', ','); // Korvaa piste pilkulla
+                          // value = value.replace('.', ','); // tämä, jos target luettiin jo?
+                          handleQuantityChange(product.id, value)                          
+                          //handleQuantityChange(product.id, e.target.value)
+                        }
+                      }}
                       placeholder="Määrä"
                     />
                     <InputUnit
@@ -290,7 +306,7 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
         </Container>
       </DisabledOverlay>
 
-      <SlideInContainerRight $isOpen={isPrintOpen}>
+      <SlideInContainerRight $isOpen={isPrintOpen} className='SlideInContainerRight'>
         <CloseButtonComponent onClick={handleClosePrint}></CloseButtonComponent>
 
         <textarea
