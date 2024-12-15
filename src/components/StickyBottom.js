@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 //#ffffc4 vaalea keltainen
-//#e1f5eb vaalea vihre‰
+//#e1f5eb vaalea vihre√§
 //#673ab7 violetti
 //#daf7f7 vaalea turkoosi
 

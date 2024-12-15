@@ -41,16 +41,16 @@ const Accordion = ({ title, colorItem, icons, children, defaultExpanded = false,
 
 
   const toggleAccordion = () => {
-    // Jos accordion avattiin ulkoisesti, annetaan k‰ytt‰j‰n hallita
+    // Jos accordion avattiin ulkoisesti, annetaan k√§ytt√§j√§n hallita
     //if (isOpenExternally === null) {
-      setIsOpen(!isOpen); // Toggle manuaalisesti k‰ytt‰j‰n toimesta
+      setIsOpen(!isOpen); // Toggle manuaalisesti k√§ytt√§j√§n toimesta
     //}
   };
 
   return (
     <AccordionWrapper>
       <AccordionTitle onClick={toggleAccordion}>
-        <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}> {/* Vie lopun k‰ytett‰viss‰ olevan tilan, jolloin muut pysyy oikeassa laidassa*/}
+        <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}> {/* Vie lopun k√§ytett√§viss√§ olevan tilan, jolloin muut pysyy oikeassa laidassa*/}
           {colorItem}
           <span style={{ marginLeft: '10px' }}>{title}</span>
         </div>

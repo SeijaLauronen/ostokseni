@@ -13,7 +13,10 @@ import SwitchButtonComponent from './SwitchButtonCompnent';
 import ColorManagement from '../ColorManagement';
 import SettingsManagement from '../SettingsManagement';
 
-const programVersion = '2024-12-09: 1.223';
+const programVersion = '2024-12-15: 1.240';
+//päivitä versiohistoria myös tänne, huom, vain ostokseni-sovelluksen!:
+//https://github.com/SeijaLauronen/SeijaLauronen.github.io/blob/main/ostokseniversio.html
+//https://seijalauronen.github.io/ostokseniversio.html
 
 const MenuContainer = styled.div`
   position: fixed;
@@ -216,7 +219,17 @@ const Menu = ({ onDatabaseCleared, isOpen, onToggleMenu, onOpenInfo }) => {
         <MenuItem onClick={() => handleOpenSettingsManagement()}>Yleiset määrittelyt<ChevronIcon /></MenuItem>
         <MenuHeader>Tietoja</MenuHeader>
         <MenuItemText>Sovellus: Ostokseni</MenuItemText>
-        <MenuItemText>Versio: {programVersion}</MenuItemText>
+        <MenuItem
+          onClick={() => handleOpenInfo(
+            <>
+              <div>Täältä näet viimeisimmän version sovelluksesta ja versiohistorian. Tähän tarvitset nettiyhteyden.</div>
+              <div>https://seijalauronen.github.io/ostokseniversio.html</div>
+              <br/>
+              <a href="https://seijalauronen.github.io/ostokseniversio.html" target='new'>Näytä versiohistoria</a>
+            </>
+          )}
+        >Versio: {programVersion}  <ChevronIcon /></MenuItem>
+
         <MenuItem onClick={() => handleOpenInfo(<DeviceInfo></DeviceInfo>)}>Selaimesi: {getBrowserName()} <ChevronIcon /></MenuItem>
         <MenuHeader></MenuHeader>
       </MenuList>
