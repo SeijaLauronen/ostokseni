@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { useCallback, createContext, useState, useContext, useEffect } from 'react';
 import { upsertColorDefinition as controllerUpsertColorDefinition, getColorDefinition as controllerGetColorDefinition } from './controller';
 
 // Väriobjekti, jossa värit määritellään vaiheilla
@@ -22,6 +22,12 @@ export const ColorProvider = ({ children }) => {
     const [selectedColors, setSelectedColors] = useState([]);
     const [colorDefinitions, setColorDefinitions] = useState({});
     const [errorState, setErrorState] = useState(null);
+
+    // Funktio kaikkien värien tilan resetointiin
+    const resetColors = () => {
+        setSelectedColors([]); // Tyhjennä valitut värit
+        setColorDefinitions({}); // Tyhjennä värimäärittelyt        
+    };
 
     const toggleColor = (color) => {
         setSelectedColors(prevColors =>
@@ -50,6 +56,22 @@ export const ColorProvider = ({ children }) => {
         }
     };
 
+
+    // Funktio kaikkien värimäärittelyjen lataamiseen
+    //const loadColorDefinitions = async () => {
+    const loadColorDefinitions = useCallback(async () => {
+        try {
+            console.log('Ladataan värimäärittelyt...');
+            for (const colorId of Object.keys(colors)) {
+                await loadColorDefinition(colorId); // Lataa värin määrittely
+            }
+            console.log('Värimäärittelyt ladattu.');
+        } catch (error) {
+            console.error('Virhe värimäärittelyjen latauksessa:', error);
+        }
+        //};
+    }, []); // EI lisätä colors-riippuvuutta, koska colors ei muutu, se on vakio. Tyhjä taulukko kuitenkin lisätty
+
     // Funktio haetaan värin lisämääre, jos sellainen on tallennettu
     const loadColorDefinition = async (colorId) => {
         try {
@@ -64,22 +86,23 @@ export const ColorProvider = ({ children }) => {
             console.error('Virhe haettaessa värin määrittelyä:', error);
             setErrorState(`Virhe haettaessa värin määrittelyä ${colorId}: ${error.message}`);
             //throw new Error('Virhe haettaessa värin määrittelyä: ' + error);
-            
+
         }
 
     };
 
 
     //TODO, ei ladata tässä
-    
+    /*
+    useEffect-hookin riippuvuustaulukossa pitäisi olla kaikki hookin sisällä käytettävät muuttujat ja funktiot, jotka ovat komponentin ulkopuolella tai uudelleenluotavia. Tässä tapauksessa loadColorDefinitions on määritelty komponentin sisällä.
+    loadColorDefinitions-funktio luodaan joka kerta, kun komponentti renderöidään. useEffect ei tiedä, onko funktio muuttunut, jos sitä ei ole lisätty riippuvuustaulukkoon.
+    Huom! käytettävä useCallback loadColorDefinitions:ssa.  Sinne EI lisätä colors-riippuvuutta, koska colors ei muutu, se on vakio
+    */
+
     useEffect(() => {
-        // Esimerkki siitä, miten voi ladata värin lisämääreitä, kun komponentti ladataan
-        Object.keys(colors).forEach(colorId => {
-            loadColorDefinition(colorId);
-        });
-        
-    }, []);
-    
+        loadColorDefinitions();
+    }, [loadColorDefinitions]);
+
 
     return (
         <ColorContext.Provider value={{
@@ -89,6 +112,8 @@ export const ColorProvider = ({ children }) => {
             setSelectedColors,
             setColorDefinition,
             colorDefinitions,
+            resetColors,
+            loadColorDefinitions,
             errorState
         }}>
             {children}
