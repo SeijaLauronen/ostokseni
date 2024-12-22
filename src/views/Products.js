@@ -37,8 +37,9 @@ const Products = ({ refresh = false, categoryId }) => {
   const [showFavorites, setShowFavorites] = useState(false);
   const [error, setError] = useState('');
   const [handledProductId, setHandledProductId] = useState(null); // ID of the newly added or edited product
-  const [isShopLongPress, setIsShopLongPress] = useState(false);
-  const { colorCodingEnabled } = useSettings();
+  const isShopLongPressRef = useRef(false); //useRef  -hook: onko käyttäjä tehnyt pitkän painalluksen. useRef -arvo ei muutu uudelleenrenderöintien välillä, joten se säilyttää tilansa koko komponentin elinkaaren ajan.
+  const { colorCodingEnabled, openQuantityByLongPress } = useSettings();
+
 
   const { colors, selectedColors, toggleColor, setSelectedColors, colorDefinitions } = useColors(); //Hook For filtering in Products
   const noColor = { code: '#e1f5eb', name: 'NoColor' }; // Taustan värinen
@@ -199,7 +200,7 @@ const Products = ({ refresh = false, categoryId }) => {
     //Mobiililaitteella seuraavan rivin teksti maalautui
     e.stopPropagation(); // Estetään tapahtuman leviäminen muihin elementteihin. 
     timerRef.current = setTimeout(() => {
-      setIsShopLongPress(true);
+      isShopLongPressRef.current = true;
     }, 500); // 500ms on aika, jota pidetään "pitkänä painalluksena"    
   }
 
@@ -208,16 +209,23 @@ const Products = ({ refresh = false, categoryId }) => {
     e.preventDefault();
     //Mobiililaitteella seuraavan rivin teksti maalautui
     e.stopPropagation(); // Estetään tapahtuman leviäminen muihin elementteihin. 
-    if (!isShopLongPress) {
-      handleToggleShoppingList(product.id); // Yhden klikkauksen tai napautuksen toiminta
-    } else {
+
+    //openQuantityByLongPress -asetuksen ja klikkauksen pituuden mukaan joko avataan määrädialogi tai lisätään tuote suoraan ostoslistalle
+    const shouldOpenQuantityDialog = openQuantityByLongPress
+      ? isShopLongPressRef.current
+      : !isShopLongPressRef.current && !product.onShoppingList;
+
+    if (shouldOpenQuantityDialog) {
       product.onShoppingList = true;
       setEditingProduct(product);
       setEditingProductAmount(true);
+    } else {
+      handleToggleShoppingList(product.id);
     }
+
     // Tyhjennä pitkän painalluksen ajastin ja tilat
     clearTimeout(timerRef.current);
-    setIsShopLongPress(false);
+    isShopLongPressRef.current = false;
   }
 
   // Estä oletustoiminta touchmove- ja contextmenu-tapahtumissa
@@ -362,6 +370,26 @@ const Products = ({ refresh = false, categoryId }) => {
       <Container {...props} />;
   };
 
+  const renderProductItemComponent = (product, index) => {
+    return (
+      <ProductItemComponent
+        key={product.id}
+        product={product}
+        ref={(el) => (productRefs.current[product.id] = el)}
+        highlightText={highlightText}
+        filter={filter}
+        handleEditProduct={handleEditProduct}
+        handleToggleFavorite={handleToggleFavorite}
+        handleShoppingListPress={handleShoppingListPress}
+        handleShoppingListRelease={handleShoppingListRelease}
+        handleTouchMove={handleTouchMove}
+        handleContextMenu={handleContextMenu}
+        colors={colors}
+        selectedColors={selectedColors}
+      />
+    );
+  }
+
   // transientti props eli is"Jotain" edessä käytetään $ ettei välity DOM:lle
   // EditProductForm ei ole styled komponentti, ei käytetä transienttia propsia
   return (
@@ -452,21 +480,7 @@ const Products = ({ refresh = false, categoryId }) => {
                 <Accordion key={category.id} title={category.name} defaultExpanded={expandedCategories.has(category.id)}>
                   <div>
                     {displayedProducts(category).map((product, index) => (
-                      <ProductItemComponent
-                        key={product.id}
-                        product={product}
-                        ref={(el) => (productRefs.current[product.id] = el)}
-                        highlightText={highlightText}
-                        filter={filter}
-                        handleEditProduct={handleEditProduct}
-                        handleToggleFavorite={handleToggleFavorite}
-                        handleShoppingListPress={handleShoppingListPress}
-                        handleShoppingListRelease={handleShoppingListRelease}
-                        handleTouchMove={handleTouchMove}
-                        handleContextMenu={handleContextMenu}
-                        colors={colors}
-                        selectedColors={selectedColors}
-                      />
+                      renderProductItemComponent(product, index)
                     ))}
 
                   </div>
@@ -477,21 +491,7 @@ const Products = ({ refresh = false, categoryId }) => {
         ) : (
           <div>
             {colorFilteredProducts(sortedProducts()).map((product, index) => (
-              <ProductItemComponent
-                key={product.id}
-                product={product}
-                ref={(el) => (productRefs.current[product.id] = el)}
-                highlightText={highlightText}
-                filter={filter}
-                handleEditProduct={handleEditProduct}
-                handleToggleFavorite={handleToggleFavorite}
-                handleShoppingListPress={handleShoppingListPress}
-                handleShoppingListRelease={handleShoppingListRelease}
-                handleTouchMove={handleTouchMove}
-                handleContextMenu={handleContextMenu}
-                colors={colors}
-                selectedColors={selectedColors}
-              />
+              renderProductItemComponent(product, index)
             ))}
 
           </div>
