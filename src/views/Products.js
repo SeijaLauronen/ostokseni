@@ -9,7 +9,7 @@ import StickyBottom from '../components/StickyBottom';
 import InputAdd from '../components/Input';
 import { AddButton } from '../components/Button';
 import Container, { ProductContainer, IconWrapper } from '../components/Container';
-import { getCategories, getProducts, getProductById, addProduct, updateProduct, deleteProduct } from '../controller';
+import { getCategories, getProducts, getProductById, addProduct, updateProduct, deleteProduct, getProductclasses } from '../controller';
 import Toast from '../components/Toast';
 import ProductItemComponent from '../components/ProductItemComponent';
 import { useColors } from '../ColorContext';
@@ -17,6 +17,7 @@ import { ColorItemsWrapper, ColorItemContainer, ColorItemSelection } from '../co
 import { useSettings } from '../SettingsContext';
 import FilterWithCrossIcon from '../components/FilterIcon';
 import SwitchButtonComponent from '../components/SwitchButtonCompnent';
+import { useProductClass } from '../ProductClassContext'; // Hook
 
 // TODO kun tekee refresh ja menee tuotesivulle, tulee (filteri-ikonista?):
 // Received `false` for a non-boolean attribute `enabled`.
@@ -47,7 +48,15 @@ const Products = ({ refresh = false, categoryId }) => {
   const productRefs = useRef({}); // Ref object to hold references to product items
 
 
+  //const [productClasses, setProductClasses] = useState([]); // Ei näin, että haetaan täällä niitä erikseen
+  const { fetchAndSetProductClasses } = useProductClass();  //Käytetään Hook:ia, että saadaan mahdollisesti päivitetyt tiedot käyttöön heti. itemissä käytetään suoraan productClasses, ei välitetä täältä
+  
+  useEffect(() => { 
+    fetchAndSetProductClasses(); // Haetaan tuoteryhmät kertaalleen, kun tullaan tälle näkymälle. Hookin kautta päivittyvät,, jos niitä on muutettu
+  },[]);
 
+
+  // Muut setting:sit ovat tuolla SettinsContextissa, mutta tätä käytetään vain tässä paikallisesti....
   // Tila alustetaan localStoragesta, jossa etsitään 'productView' arvoa
   const [showByCategory, setShowByCategory] = useState(() => {
     const saved = localStorage.getItem('productView');
@@ -196,7 +205,7 @@ const Products = ({ refresh = false, categoryId }) => {
 
   const timerRef = useRef(null);
   const handleShoppingListPress = (e, product) => {
-    e.preventDefault();
+    //e.preventDefault(); // 22.12.2024 kommentteihin, koska tuli virhe: Unable to preventDefault inside passive event listener invocation.
     //Mobiililaitteella seuraavan rivin teksti maalautui
     e.stopPropagation(); // Estetään tapahtuman leviäminen muihin elementteihin. 
     timerRef.current = setTimeout(() => {
@@ -227,6 +236,17 @@ const Products = ({ refresh = false, categoryId }) => {
     clearTimeout(timerRef.current);
     isShopLongPressRef.current = false;
   }
+
+  // 22.12.2024 Lisätään tapahtumankuuntelija passiiviseksi, koska tuli virhe: Unable to preventDefault inside passive event listener invocation.
+  // Jätän tämn tähän muistutukseksi, rttä tämä esti koko näytön vierittämisen. Tekoäly tätä ehdotti jonkin virheen krjaamiseen, eipä ollut järkevä
+  /*
+  useEffect(() => {
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
+  */
 
   // Estä oletustoiminta touchmove- ja contextmenu-tapahtumissa
   const handleTouchMove = (event) => {
@@ -385,7 +405,7 @@ const Products = ({ refresh = false, categoryId }) => {
         handleTouchMove={handleTouchMove}
         handleContextMenu={handleContextMenu}
         colors={colors}
-        selectedColors={selectedColors}
+        selectedColors={selectedColors}        
       />
     );
   }
