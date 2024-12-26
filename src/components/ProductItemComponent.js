@@ -12,13 +12,34 @@ import { IconContainer, IconWrapper } from '../components/Container';
 import { ProductListItem } from './Item';
 import { ColorItemsWrapper, ColorItemContainer, ColorItem } from '../components/ColorItem';
 import { useSettings } from '../SettingsContext';
+import styled from 'styled-components';
+import { useProductClass } from '../ProductClassContext';
+
+
+const StyledText = styled.span` 
+ font-size: 0.8em;
+ margin-left: 2px;
+`;
 
 const ProductItemComponent = forwardRef(
   /* Huom, kun lisätään loogista koodia ja return, pitää olla seuraavan rivin lopussa aaltosulut. Kaarisulku, jos ei returnia : */
   ({ product, highlightText, filter, handleEditProduct, handleToggleFavorite, handleShoppingListPress, handleShoppingListRelease, handleTouchMove, handleContextMenu, colors, selectedColors }, ref) => {
 
     const noColor = { code: '#FFF', name: 'White' }; // Tämä voisi olla myös tuolla ylemäpänä
-    const { colorCodingEnabled } = useSettings();  // Tämä laitetaan funktiokehykseen, on loogista koodia
+    const { colorCodingEnabled, showDose, showProductClass } = useSettings();  // Tämä laitetaan funktiokehykseen, on loogista koodia
+    const { productClasses } = useProductClass(); // Hook, otetaankin täältä eikä Product.js:n kautta
+    
+    const renderAdditionalInfoText = () => {
+      return (
+        <StyledText>
+          {showProductClass && product.classId &&
+            productClasses.find(pc => pc.id === product.classId)?.name
+            ? `${productClasses.find(pc => pc.id === product.classId).name}`
+            : ''}
+          {showDose && product.dose ? ` (${product.dose})` : ''}
+        </StyledText>
+      )
+    }
 
     return (
       <div>
@@ -26,20 +47,21 @@ const ProductItemComponent = forwardRef(
 
           {/* Ensimmäinen sarake: nimi ja värikoodit */}
           <div style={{ display: 'flex', flexDirection: 'column', gridColumn: '1' }}>
-            <span>{highlightText(product.name, filter)}</span>
+            <span>{highlightText(product.name, filter)} {!colorCodingEnabled && renderAdditionalInfoText()} </span>
 
             {/* Näytetään värit vain jos tuotteelle on annettu jokin värikoodi */}
             {colorCodingEnabled && Object.keys(colors).some(colorKey => product[colorKey]) && (
-              <ColorItemsWrapper>
+              <ColorItemsWrapper className='colorItemsWrapper'>
                 {
                   Object.keys(colors).map(colorKey => (
-                    < ColorItemContainer key={colorKey} >
+                    < ColorItemContainer key={colorKey} className='colorItemContainer'>
                       <ColorItem
                         color={product[colorKey] ? colors[colorKey] : noColor}>
                       </ColorItem>
                     </ColorItemContainer>
                   ))
                 }
+                {renderAdditionalInfoText()}
               </ColorItemsWrapper>
             )}
 
@@ -68,8 +90,8 @@ const ProductItemComponent = forwardRef(
                 <FontAwesomeIcon
                   icon={faShoppingCart}
                   style={{ color: product.onShoppingList ? 'green' : 'lightgrey' }}
-                />                  
-                
+                />
+
               </IconWrapper>
             </IconContainer>
           </div>

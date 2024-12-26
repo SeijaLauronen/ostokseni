@@ -43,14 +43,17 @@ const helpTexts = {
         Voit asettaa tuotteita <b>suosikeiksi</b> ja yläpalkin tähdestä suodattaa näkyviin vain suosikit.
       </p>
       <p>
-        Klikkaamalla <b>ostoskorin</b> kuvaa voit asettaa tuotteen ostoslistalle tai pois sieltä. 
+        Klikkaamalla <b>ostoskorin</b> kuvaa voit asettaa tuotteen ostoslistalle tai pois sieltä.
         Asetuksista voi määritellä, haluatko avata määrädialogin automaattisesti vai vasta pitkällä klikkauksella.
       </p>
       <p>
-        Voit suodattaa tuotteita <b>väreittäin</b>. Menun asetuksista voi säätää, käytetäänkö tuotteilla värikoodeja. 
+        Voit suodattaa tuotteita <b>väreittäin</b>. Menun asetuksista voi säätää, käytetäänkö tuotteilla värikoodeja.
         Halutessasi voit määritellä väreille merkitykset menun valikosta "Värien määrittely".
-        Tuotteelle voit valita värit ja tuotesivun yläpalkin suodattimesta voi valita näkyviin haluamasi värit/värittömät 
-        ja poistaa valinnat klikkaamalla suodattimen kuvaa. 
+        Tuotteelle voit valita värit ja tuotesivun yläpalkin suodattimesta voi valita näkyviin haluamasi värit/värittömät
+        ja poistaa valinnat klikkaamalla suodattimen kuvaa.
+      </p>
+      <p>
+        Voit antaa tuotteille <b>luokitustietoja</b>, esim proteiinit, hiilihydraatit jne, kun määrittelet luokat ensin asetuksista.
       </p>
     </>
   ),
@@ -133,8 +136,8 @@ const helpTexts = {
   ),
   showExportDB: (
     <>
-       <br/>
-        Voit muokata tietoja.
+      <br />
+      Voit muokata tietoja.
     </>
   ),
   importDB: (
@@ -146,8 +149,8 @@ const helpTexts = {
   ),
   showImportDB: (
     <>
-      <br/>
-        Liitä tai kirjoita tähän tiedot json-muotoisena:      
+      <br />
+      Liitä tai kirjoita tähän tiedot json-muotoisena:
     </>
   ),
   loadExampleDB: (
@@ -158,6 +161,15 @@ const helpTexts = {
       <p>
         Mikäli olet jo tallentanut tietoja ohjelmalla, suositellaan varmuuskopion ottamista "Vie tiedot" toiminnolla.
       </p>
+    </>
+  ),
+  productClasses: (
+    <>
+      
+        Voit määritellä tuoteluokkia, esimerkiksi proteiinit, kasvikset, rasvat jne.
+        Tiedot tallentuvat välittömästi ilman erillistä tallentamista, myös poisto!
+        Nimeä voit muokata suoraan tekstikentässä. Luokkien järjestystä voit muuttaa raahaamalla luokkaa haluttuun paikkaan.
+      
     </>
   ),
 

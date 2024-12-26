@@ -19,7 +19,7 @@ export const GrabbableItem = styled(Item)`
 
   cursor: grab; /* "Grab" kursori */
   &:active {
-    cursor: grabbing; /* "Grabbing" kursori, kun itemiä vedetään */
+    cursor: grabbing; /* "Grabbing" kursori, kun itemiä vedetään */    
   }
   
   box-shadow: 
@@ -36,6 +36,22 @@ export const ProductListItem = styled(Item)`
 `;
 
 export const CategoryItem = styled(GrabbableItem)`
+`;
+
+export const ProductClassItemGrabbable = styled(GrabbableItem)`
+  // grabbale asemointi ei toiminut sliding-containerilla jossa käytetään translatea. Piti vaihtaa slidin container toisenlaiseen
+  // transform: translateX(0) !important;
+  // position: absolute;
+  padding-left: 5px;
+  padding-right: 2px;
+  margin: 2px 20px 2px 2px; 
+  border: 1px solid #ccc;
+  border-radius: 4px;  
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  word-wrap: break-word;
+  word-break: break-all;  
 `;
 
 export const ShoppingListItem = styled(Item)`
