@@ -53,7 +53,7 @@ const Products = ({ refresh = false, categoryId }) => {
   
   useEffect(() => { 
     fetchAndSetProductClasses(); // Haetaan tuoteryhmät kertaalleen, kun tullaan tälle näkymälle. Hookin kautta päivittyvät,, jos niitä on muutettu
-  },[]);
+  },[]); // TODO pitääkö laittaa fetchAndSetProductClasses
 
 
   // Muut setting:sit ovat tuolla SettinsContextissa, mutta tätä käytetään vain tässä paikallisesti....
@@ -459,14 +459,14 @@ const Products = ({ refresh = false, categoryId }) => {
           {colorCodingEnabled && (
             <div className='filter-row'>
 
-              <FilterWithCrossIcon
+              <FilterWithCrossIcon className =  'FilterWithCrossIcon"'
                 $filterEnabled={selectedColors.length > 0}
                 onClick={handleFilterClick}
               />
               <ColorItemsWrapper className='CIWrapper'>
                 {Object.keys(colors).map(colorKey => (
                   <ColorItemContainer key={colorKey} className='CIContainer'>
-                    <ColorItemSelection
+                    <ColorItemSelection 
                       className='CISelection'
                       color={colors[colorKey]}
                       selected={selectedColors.includes(colorKey)}
