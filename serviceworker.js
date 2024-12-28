@@ -1,6 +1,6 @@
-const programVersion = '2024-12-28: 1.268';
-const staticCacheName = 'myshopping-static-268'; 
-const dynamicCacheName = 'myshopping-dynamic-268'; // Ei välttämätön
+const programVersion = '2024-12-28: 1.270';
+const staticCacheName = 'myshopping-static-270'; 
+const dynamicCacheName = 'myshopping-dynamic-270'; // Ei välttämätön
 
 const assets = [
   '/',
