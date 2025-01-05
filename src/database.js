@@ -1,8 +1,8 @@
 import { openDB } from 'idb';
 
 const DB_NAME = 'OstokseniDB';
-const DB_VERSION = 3;
-const STORE_NAMES = ['categories', 'products', 'colordefinitions', 'productclasses']; // Määritä taulujen nimet
+const DB_VERSION = 4;
+const STORE_NAMES = ['categories', 'products', 'colordefinitions', 'productclasses', 'days']; // Määritä taulujen nimet
 
 const initDB = async () => {
   try {
@@ -21,6 +21,10 @@ const initDB = async () => {
         // versio 3:
         if (!db.objectStoreNames.contains('productclasses')) {
           db.createObjectStore('productclasses', { keyPath: 'id', autoIncrement: true });
+        }
+        // versio 4: käyttöön days
+        if (!db.objectStoreNames.contains('days')) {
+          db.createObjectStore('days', { keyPath: 'id', autoIncrement: true });
         }
       },
     });

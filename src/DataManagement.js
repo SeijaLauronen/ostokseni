@@ -143,7 +143,7 @@ const DataManagement = ({ isOpen, action, onClose }) => {
     setSavedFilename(filename);
   };
 
-  const { deleteLocalStorage, setLocalStorageDefaults } = useSettings();
+  const { deleteLocalStorage, setLocalStorageDefaults, setDayPlanEnabled } = useSettings();
   const { resetColors, loadColorDefinitions } = useColors(); //Hook
 
   const handleLoadExample = async () => {
@@ -153,14 +153,14 @@ const DataManagement = ({ isOpen, action, onClose }) => {
       message: 'Haluatko varmasti ladata esimerkkiaineiston? Tämä poistaa nykyiset tiedot.',
       onConfirm: async () => {
         setLoading(true);
-        await handleImportData(exampleData);
-        //setColorCodingEnabled(true); // Ota värikoodit käyttöön latauksen jälkeen
+        await handleImportData(exampleData);        
         
         setLocalStorageDefaults(); // Asetetaan localStore-määrittelyt, mm värikoodit käyttöön
+        setDayPlanEnabled(true); // Tämä menee oletuksissa pois päältä, niin asetetaan se
         setTimeout(() => {
           loadColorDefinitions(); // Ladataan värimäärittelyt kontekstiin
-        }, 0); // Odotetaan, että localStorage päivittyy. Tkeeköhän tämä oikeasti mitään....
-        
+        }, 0); // Odotetaan, että localStorage päivittyy. Tekeeköhän tämä oikeasti mitään....
+                
         fetchAndSetProductClasses();  //Ladataan tuoteryhmät kontekstiin
         setLoading(false);
         setSuccess(true);
@@ -283,7 +283,7 @@ Malli json tekstistä:
         <Toast message={error} onClose={() => setError('')} />
       )}
 
-      <SlideInContainerRight $isOpen={isOpen}>
+      <SlideInContainerRight $isOpen={isOpen} className='SlideInContainerRight'>
         <CloseButtonComponent onClick={() => onClose(success && !loading)}></CloseButtonComponent>
 
         {action === 'import' && (

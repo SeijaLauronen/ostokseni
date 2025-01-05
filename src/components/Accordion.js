@@ -4,13 +4,18 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const AccordionWrapper = styled.div`
-  margin-bottom: 10px;
+
+  //margin-bottom: 10px;
+  //margin-bottom: ${({ $accordionmini }) => '1px' || '10px'}; /* Oletusarvo 10px */ 
+  margin-bottom: ${({ $accordionmini }) => ($accordionmini ? '1px' : '10px')}; /* Oletusarvo 10px */
   border: 1px solid #ccc;
   border-radius: 4px;
+  max-width: 100%;  
 `;
 
 const AccordionTitle = styled.div`
-  padding: ${({ $accordionmini }) => '3px' || '10px'}; /* Oletusarvo 10px */ 
+  //padding: ${({ $accordionmini }) => '3px' || '10px'}; /* Oletusarvo 10px */ 
+  padding: ${({ $accordionmini }) => ($accordionmini ? '3px' : '10px')}; /* Oletusarvo 10px */
   //padding: 10px;
   cursor: pointer;
   background-color: #f7f7f7;
@@ -23,11 +28,11 @@ const AccordionTitle = styled.div`
 `;
 
 // transientti props $isOpen, koska styled komponentti ja isJotain
-const AccordionContent = styled.div`
-  padding: ${({ $accordionmini }) => '3px' || '10px'}; /* Oletusarvo 10px */ 
+const AccordionContent = styled.div`  
+  padding: ${({ $accordionmini }) => ($accordionmini ? '3px' : '10px')}; /* Oletusarvo 10px */
   //padding: 10px;
   background-color: #fff;
-  display: ${({ $isOpen }) => ($isOpen ? 'block' : 'none')};
+  display: ${({ $isOpen }) => ($isOpen ? 'block' : 'none')};  
 `;
 
 //Huom! ei tarvitse antaa kaikkia propseja!! Erilainen kuin funktio. Esim colorItem voi puuttua
@@ -51,7 +56,7 @@ const Accordion = ({ title, colorItem, icons, children, defaultExpanded = false,
 
   return (
     <AccordionWrapper>
-      <AccordionTitle onClick={toggleAccordion} $accordionmini={accordionmini}>
+      <AccordionTitle $accordionmini={accordionmini}>
         {/* $padding={titlepadding} on transientti props, joka menee styled componentille */}
         {/* Huom! titlepadding on props, joka tulee komponentille */}
         <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}> {/* Vie lopun käytettävissä olevan tilan, jolloin muut pysyy oikeassa laidassa*/}
@@ -62,7 +67,7 @@ const Accordion = ({ title, colorItem, icons, children, defaultExpanded = false,
           {icons}
         </div>
         <span>
-          <FontAwesomeIcon style={{ marginLeft: '10px' }} icon={isOpen ? faChevronUp : faChevronDown} />
+          <FontAwesomeIcon onClick={toggleAccordion} style={{ marginLeft: '10px' }} icon={isOpen ? faChevronUp : faChevronDown} />
         </span>
       </AccordionTitle>
       <AccordionContent $isOpen={isOpen} $accordionmini={accordionmini}>{children}</AccordionContent>

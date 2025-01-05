@@ -1,6 +1,6 @@
-const programVersion = '2024-12-28: 1.270';
-const staticCacheName = 'myshopping-static-270'; 
-const dynamicCacheName = 'myshopping-dynamic-270'; // Ei välttämätön
+const programVersion = '2025-01-05: 2.310';
+const staticCacheName = 'myshopping-static-2310'; 
+const dynamicCacheName = 'myshopping-dynamic-2310'; // Ei välttämätön
 
 const assets = [
   '/',
@@ -21,14 +21,14 @@ const limitCacheSize = (name, size) => {
 };
 
 
-// install event
+// install event skip waiting laitettu, ettei odota vanhan version sulkemista
 self.addEventListener('install', evt => {
   //console.log('service worker installed');
   evt.waitUntil(
     caches.open(staticCacheName).then((cache) => {
       console.log('installed,caching shell assets');
       cache.addAll(assets);
-    })
+    }).then(() => self.skipWaiting())
   );
 });
 
@@ -44,6 +44,7 @@ self.addEventListener('activate', evt => {
         .map(key => caches.delete(key))
       );
     })
+    .then(() => self.clients.claim()) // Aktivoi uusi palvelutyöntekijä heti, auttaa uuden version latautumisessa
   );
 });
 
