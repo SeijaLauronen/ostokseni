@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import DraggableArea from './DraggableArea';
 
 const AccordionWrapper = styled.div`
   margin-bottom: 20px;
@@ -80,14 +81,14 @@ const AccordionDraggable = ({
     return (
         <Draggable key={item.id.toString()} draggableId={item.id.toString()} index={index}>
             {(provided) => (
-                <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                <div ref={provided.innerRef} {...provided.draggableProps} >
                     <AccordionWrapper>
-                        <AccordionTitle >
-                            <span>{title || item.name}</span>
-                            <span>
-                                {icons && <>{icons}</>}
-                                <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} onClick={toggleAccordion} />
-                            </span>
+                        <AccordionTitle>
+                            <DraggableArea {...provided.dragHandleProps}>
+                                <span>{title || item.name}</span>
+                            </DraggableArea>
+                            {icons && <>{icons}</>}
+                            <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} onClick={toggleAccordion} />
                         </AccordionTitle>
                         <AccordionContent $isOpen={isOpen}>
                             {isDroppable && droppableId ? (
