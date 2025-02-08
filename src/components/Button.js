@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTrash, faSave, faTimes, faPlus, faQuestion, faCopy, faPaste, faShare, faUndo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import FilterWithCrossIcon from './FilterIcon';
 
 const Button = styled.button`
   background-color: ${props => (props.disabled ? '#ccc' : props.bgColor || '#007BFF')};
@@ -162,3 +163,12 @@ export const PrimaryButton = styled(ButtonComponent)`
   }  
 `;
 
+export const ButtonWithFilterIcon = ({ $filterEnabled, count, filtertext, onClick, ...props }) => (
+  <Button onClick={onClick} disabled={!$filterEnabled} {...props}>
+    <FilterWithCrossIcon
+      $filterEnabled={$filterEnabled}
+      count={count}
+      filtertext={filtertext}
+    />
+  </Button>
+);

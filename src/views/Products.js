@@ -7,7 +7,7 @@ import Accordion from '../components/Accordion';
 import { ProductStickyTop } from '../components/StickyTop';
 import StickyBottom from '../components/StickyBottom';
 import InputAdd from '../components/Input';
-import { AddButton } from '../components/Button';
+import { AddButton, ButtonWithFilterIcon } from '../components/Button';
 import Container, { ProductContainer, IconWrapper } from '../components/Container';
 import { getCategories, getProducts, getProductById, addProduct, updateProduct, deleteProduct } from '../controller';
 import Toast from '../components/Toast';
@@ -15,8 +15,9 @@ import ProductItemComponent from '../components/ProductItemComponent';
 import { useColors } from '../ColorContext';
 import { ColorItemsWrapper, ColorItemContainer, ColorItemSelection } from '../components/ColorItem';
 import { useSettings } from '../SettingsContext';
-import FilterWithCrossIcon from '../components/FilterIcon';
+import FilterWithCrossIcon, { SearchWithCrossIcon }  from '../components/FilterIcon';
 import SwitchButtonComponent from '../components/SwitchButtonCompnent';
+import { CountDisplay } from '../components/CountDisplay';
 import { useProductClass } from '../ProductClassContext'; // Hook
 
 // TODO kun tekee refresh ja menee tuotesivulle, tulee (filteri-ikonista?):
@@ -33,13 +34,14 @@ const Products = ({ refresh = false, categoryId }) => {
   const [editingProductAmount, setEditingProductAmount] = useState(false);;
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [filter, setFilter] = useState('');
+  const [countFoundProducts, setCountFoundProducts] = useState(0);
   const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId); //Lisäsin tämän
   const [selectedCategoryName, setSelectedCategoryName] = useState(''); //tämä lisätty
   const [showFavorites, setShowFavorites] = useState(false);
   const [error, setError] = useState('');
   const [handledProductId, setHandledProductId] = useState(null); // ID of the newly added or edited product
   const isShopLongPressRef = useRef(false); //useRef  -hook: onko käyttäjä tehnyt pitkän painalluksen. useRef -arvo ei muutu uudelleenrenderöintien välillä, joten se säilyttää tilansa koko komponentin elinkaaren ajan.
-  const { colorCodingEnabled, openQuantityByLongPress } = useSettings();
+  const { colorCodingEnabled, openQuantityByLongPress, filterSearchProducts } = useSettings();
   const { colors, selectedColors, toggleColor, setSelectedColors, colorDefinitions, noColor } = useColors(); //Hook For filtering in Products
 
   const productRefs = useRef({}); // Ref object to hold references to product items
@@ -47,10 +49,10 @@ const Products = ({ refresh = false, categoryId }) => {
 
   //const [productClasses, setProductClasses] = useState([]); // Ei näin, että haetaan täällä niitä erikseen
   const { fetchAndSetProductClasses } = useProductClass();  //Käytetään Hook:ia, että saadaan mahdollisesti päivitetyt tiedot käyttöön heti. itemissä käytetään suoraan productClasses, ei välitetä täältä
-  
-  useEffect(() => { 
+
+  useEffect(() => {
     fetchAndSetProductClasses(); // Haetaan tuoteryhmät kertaalleen, kun tullaan tälle näkymälle. Hookin kautta päivittyvät,, jos niitä on muutettu
-  },[]); // TODO pitääkö laittaa fetchAndSetProductClasses
+  }, []); // TODO pitääkö laittaa fetchAndSetProductClasses, siitä kyllä tulee warnig, mutta jos sen laittaa, niin Editboksi ei aina aukea, jääkö pyörimään johonkin silmukkaan....
 
 
   // Muut setting:sit ovat tuolla SettinsContextissa, mutta tätä käytetään vain tässä paikallisesti....
@@ -100,6 +102,45 @@ const Products = ({ refresh = false, categoryId }) => {
   useEffect(() => {
     fetchAndSetProductsAndCategories();
   }, [fetchAndSetProductsAndCategories, refresh]);
+
+
+
+  //TODO... tarkista toimiiko kun värit filtteröity...
+  useEffect(() => {
+    if (filter) {
+      const filteredCount = combinedFilteredProducts.filter(product =>
+        product.name.toLowerCase().includes(filter)
+      ).length;
+      setCountFoundProducts(filteredCount);
+    } else {
+      setCountFoundProducts(0);
+    }
+  }, [filter, products, selectedCategoryId, selectedColors, showFavorites]);
+  //}, [filter, combinedFilteredProducts]); // cannot access combinedFilteredProducts before initialization
+
+
+  // TODO tätä pitäisi käyttää muutenkin renderöinnissä, ei vain tuossa useEffectissä
+  const combinedFilteredProducts = products.filter(product => {
+    // Tarkistetaan kategoriat, jos valinta on tehty
+    const categoryMatch = selectedCategoryId ? product.categoryId === selectedCategoryId : true;
+
+    // Tarkistetaan värit, jos värisuodatus on käytössä, sisältäen "noColor"-valinnan
+    const colorMatch = selectedColors.length > 0
+      ? selectedColors.some(colorKey => {
+        if (colorKey === 'noColor') {
+          return !Object.keys(colors).some(colorKey => product[colorKey]);
+        }
+        return product[colorKey];
+      })
+      : true;
+
+    // Lisää tarvittaessa muita suodatuslogiikoita
+    const starMatch = showFavorites ? product.isFavorite : true;
+
+    // Palautetaan true vain, jos kaikki ehdot täyttyvät
+    return categoryMatch && colorMatch && starMatch;
+  });
+
 
   const handleAddProduct = async () => {
     try {
@@ -235,7 +276,7 @@ const Products = ({ refresh = false, categoryId }) => {
   }
 
   // 22.12.2024 Lisätään tapahtumankuuntelija passiiviseksi, koska tuli virhe: Unable to preventDefault inside passive event listener invocation.
-  // Jätän tämn tähän muistutukseksi, rttä tämä esti koko näytön vierittämisen. Tekoäly tätä ehdotti jonkin virheen krjaamiseen, eipä ollut järkevä
+  // Jätän tämn tähän muistutukseksi, että tämä esti koko näytön vierittämisen. Tekoäly tätä ehdotti jonkin virheen krjaamiseen, eipä ollut järkevä
   /*
   useEffect(() => {
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -343,6 +384,7 @@ const Products = ({ refresh = false, categoryId }) => {
   const handleClearFilter = () => {
     setFilter('');
     setNewProduct('');
+    setCountFoundProducts(0);
   };
 
   useEffect(() => {
@@ -388,8 +430,13 @@ const Products = ({ refresh = false, categoryId }) => {
   };
 
   const renderProductItemComponent = (product, index) => {
+    // jos filterSearchProducts on päällä, suodatetaan, jos ei ole päällä, näytetään kaikki
+    // console.log('renderProductItemComponent', product.name, filter, product.name.toUpperCase().includes(filter.toUpperCase()),  product.name.toUpperCase().search(filter.toUpperCase()));
+    const show = product.name.toUpperCase().includes(filter.toUpperCase()) || !filterSearchProducts;
+
     return (
-      <ProductItemComponent
+      show && <ProductItemComponent
+
         key={product.id}
         product={product}
         ref={(el) => (productRefs.current[product.id] = el)}
@@ -402,7 +449,7 @@ const Products = ({ refresh = false, categoryId }) => {
         handleTouchMove={handleTouchMove}
         handleContextMenu={handleContextMenu}
         colors={colors}
-        selectedColors={selectedColors}        
+        selectedColors={selectedColors}
       />
     );
   }
@@ -428,7 +475,7 @@ const Products = ({ refresh = false, categoryId }) => {
       )}
 
       <MyContainer $isEditFormOpen={editingProduct}>
-        <ProductStickyTop $showFilterRow={colorCodingEnabled}>
+        <ProductStickyTop $showFilterRow={colorCodingEnabled} className='ProductStickyTop'>
           <div className='topHeader'>
             <b>{selectedCategoryName && `${selectedCategoryName}:`}Tuotteet</b>
 
@@ -456,14 +503,15 @@ const Products = ({ refresh = false, categoryId }) => {
           {colorCodingEnabled && (
             <div className='filter-row'>
 
-              <FilterWithCrossIcon className =  'FilterWithCrossIcon"'
+              <FilterWithCrossIcon className='FilterWithCrossIcon"'
                 $filterEnabled={selectedColors.length > 0}
+                filtertext={' '}
                 onClick={handleFilterClick}
               />
               <ColorItemsWrapper className='CIWrapper'>
                 {Object.keys(colors).map(colorKey => (
                   <ColorItemContainer key={colorKey} className='CIContainer'>
-                    <ColorItemSelection 
+                    <ColorItemSelection
                       className='CISelection'
                       color={colors[colorKey]}
                       selected={selectedColors.includes(colorKey)}
@@ -517,17 +565,25 @@ const Products = ({ refresh = false, categoryId }) => {
       </MyContainer>
       <StickyBottom>
 
-        <IconWrapper >
-          {newProduct ? (
-            <FontAwesomeIcon onClick={handleClearFilter}
-              icon={faTimes}
-            />
-          ) : (
-            <FontAwesomeIcon
-              icon={faMagnifyingGlass}
-            />
-          )}
-        </IconWrapper>
+        {filterSearchProducts ? (          
+            <FilterWithCrossIcon className='FilterWithCrossIcon"'
+              $filterEnabled={newProduct}
+              onClick={handleClearFilter}
+              //count={countFoundProducts}
+              //filtertext={newProduct ? `Lkm: ${countFoundProducts}` : ' '}
+              filtertext={' '}
+            />  
+        ) : (
+          <SearchWithCrossIcon className='SearchWithCrossIcon"'
+            $filterEnabled={newProduct}
+            onClick={handleClearFilter}
+            filtertext={' '}
+          />
+        )}
+
+        <CountDisplay isFiltered={Boolean(filter)}>
+          {filter ? countFoundProducts : ''}
+        </CountDisplay>
 
         <InputAdd
           type="text"
