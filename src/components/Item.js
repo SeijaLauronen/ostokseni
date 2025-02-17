@@ -28,6 +28,7 @@ export const GrabbableItem = styled(Item)`
   box-shadow: 
     inset 0 4px 6px rgba(0, 0, 0, 0.1),  /* Sisäinen yleinen varjo */
     inset 0 1px 3px rgba(0, 0, 0, 0.08); /* Sisäinen hieno varjo */
+    background-color: #f5fdff; //hento sininen
 `;
 
 export const ProductListItem = styled(Item)`
@@ -36,9 +37,14 @@ export const ProductListItem = styled(Item)`
   gap: 10px; /* Sarakkeiden väli */
   align-items: center; /* Kohdista ikonit keskelle pystysuunnassa */
   padding-bottom: 5px;
+  margin: 2px 0;
 `;
 
 export const CategoryItem = styled(GrabbableItem)`
+  padding-left: 10px;
+  margin: 3px 0;
+  font-size: large;  
+  font-weight: bold;
 `;
 
 export const ProductClassSelectionHeader = styled.div`
@@ -83,8 +89,8 @@ export const ProductClassItemGrabbable = styled(GrabbableItem)`
 `;
 
 export const ShoppingListItem = styled(Item)`
-  padding-left: 10px;
-  margin: 10px 0;
+  padding-left: 10px;  
+  margin: 2px 0;
   border: 1px solid #ccc;
   border-radius: 4px;
   background-color: #fff;
@@ -96,6 +102,7 @@ export const ShoppingListItem = styled(Item)`
   @media (min-width: 300px) {
     flex-direction: row;
     justify-content: space-between;
+    align-items: flex-start;
     align-items: center;
   }
 `;
