@@ -25,12 +25,13 @@ padding: 5px;
 const SettingHeader = styled.span`
     font-weight: bold;
 `
+// OnePlus:ssa ei toiminut flex oikein, joten vaihdettiin gridiksi
 const SettingRow = styled.span`
- display: flex;
- justify-content: space-between;
- align-items: center;
- gap: 20px; // elementtien väli
- margin: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto; //Teksti vasemmalle, kytkin oikealle 
+  align-items: center;
+  gap: 20px;
+  margin: 10px;
 `
 
 const SettingsManagement = ({ isOpen, onClose }) => {
@@ -75,7 +76,7 @@ const SettingsManagement = ({ isOpen, onClose }) => {
                         />
                     </SettingRow>
                     <SettingRow>
-                        <label>Piilota määrä <SettingHeader>määrä</SettingHeader> ja <SettingHeader>yksikkö</SettingHeader> ostoslistalta.
+                        <label>Piilota <SettingHeader>määrä</SettingHeader> ja <SettingHeader>yksikkö</SettingHeader> ostoslistalta.
                         </label>
 
                         <SwitchButtonComponent
