@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import EditDayForm from './forms/EditDayForm';
 import EditMealForm from './forms/EditMealForm';
-import StickyTop from '../components/StickyTop';
+import { DayStickyTop } from '../components/StickyTop';
 import StickyBottom from '../components/StickyBottom';
 import InputAdd from '../components/Input';
 import { AddButton } from '../components/Button';
@@ -20,6 +20,7 @@ import { useProductClass } from '../ProductClassContext'; // Hook
 import { useColors } from '../ColorContext'; // Hook
 import { useSettings } from '../SettingsContext';
 import styled from 'styled-components';
+import SwitchButtonComponent from '../components/SwitchButtonCompnent';
 
 
 const ClassTitleStyled = styled.span`
@@ -37,11 +38,19 @@ const MealTitleStyled = styled.span`
 const DayTitleStyled = styled.span`
   font-weight: bold;
   font-size: larger;
+  color: ${(props) => (props.$active ? 'black' : 'grey')};
 `;
 
 const DayTitleWrapper = styled.div` 
   display: flex;  
   align-items: center;  
+
+  .activemark {    
+    cursor: pointer;
+    margin-right: 14px;
+    display: inline-flex;
+    align-items: center;                             
+  }
 `;
 
 // TODO onDaySelect...
@@ -149,6 +158,19 @@ const Days = ({ refresh = false, isMenuOpen, onDaySelect }) => {
     fetchAndSetProductClasses(); // Haetaan tuoteryhmät kertaalleen, kun tullaan tälle näkymälle. Hookin kautta päivittyvät,, jos niitä on muutettu
   }, []); // TODO pitääkö laittaa fetchAndSetProductClasses
 
+
+  // Lähes kaikki muut setting:sit ovat tuolla SettinsContextissa, mutta tätä käytetään vain tässä paikallisesti....
+  // Tila alustetaan localStoragesta, jossa etsitään 'dayView' arvoa
+  const [showActiveDaysOnly, setShowActiveDaysOnly] = useState(() => {
+    const saved = localStorage.getItem('dayView');
+    // Tarkistetaan, sisältääkö saved-arvo 'showByCategory'
+    return saved === 'showActiveDaysOnly' ? true : false;
+  });
+
+  // Tallennetaan localStorageen aina, kun tila muuttuu
+  useEffect(() => {
+    localStorage.setItem('dayView', showActiveDaysOnly ? 'showActiveDaysOnly' : '');
+  }, [showActiveDaysOnly]);
 
   const [expandedStates, setExpandedStates] = useState({}); // TODO ei tällä oikeasti taida olla tällä hetkellä mitään virkaa...
 
@@ -347,6 +369,37 @@ const Days = ({ refresh = false, isMenuOpen, onDaySelect }) => {
   };
 
 
+  // Vaihdetaan päivän aktiivisuus tilaa, eli värikoodia
+  const handleToggleDayColor = async (day) => {
+    try {
+      const updatedDay = {
+        ...day,
+        active: !day.active, // Vaihda tila
+      };
+
+      console.log('Toggling active for', day.name, '->', updatedDay.active);
+      await updateDay(day.id, updatedDay);
+      // Päivitä tila manuaalisesti, jotta viiveet minimoidaan
+      setDays((prevDays) =>
+        prevDays.map((d) => (d.id === day.id ? updatedDay : d))
+      );
+    } catch (err) {
+      console.error('Virhe päivitettäessä päivän aktiivisuutta:', err);
+      setError('Päivän aktiivisuutta ei voitu tallentaa');
+    }
+  };
+
+  const toggleActiveDaysOnly = () => {
+    setShowActiveDaysOnly(!showActiveDaysOnly);
+    setError(null);
+  };
+
+  const visibleDays = showActiveDaysOnly
+    ? days.filter(day => day.active)
+    : days;
+
+  const noActiveMessage = "Valittuja päiviä ei ole, asetetaan kaikki näkymään. " +
+  (colorCodingEnabled ? "Päivän voit valita klikkaamalla päivän nimen edessä olevaa painiketta." : "");
   // Container in styled komponentti, käytetään transientti props $isJotain...
   // transientti props $isOpen ei käytetä, koska EditCategoryForm ei ole styled komponentti
   return (
@@ -354,6 +407,10 @@ const Days = ({ refresh = false, isMenuOpen, onDaySelect }) => {
       <>
         {error && (
           <Toast message={error} onClose={() => setError('')} />
+        )}
+
+        {visibleDays.length === 0 && showActiveDaysOnly && (
+          <Toast message={noActiveMessage} onClose={toggleActiveDaysOnly} />
         )}
 
         {isDayFormOpen && editingDay && (
@@ -387,9 +444,24 @@ const Days = ({ refresh = false, isMenuOpen, onDaySelect }) => {
 
         <Container $isMenuOpen={isMenuOpen} $isDayFormOpen={isDayFormOpen}>
           { /* console.log("expandedStates", expandedStates) */}
-          <StickyTop>
-            <b>Päiväsuunnitelmat</b>
-          </StickyTop>
+          <DayStickyTop>
+            <div className="day-header">
+              <b>Päiväsuunnitelmat</b>
+            </div>
+
+            <div className="day-switch">
+              <label>
+                Vain valitut
+              </label>
+              <SwitchButtonComponent
+                checked={showActiveDaysOnly}
+                onChange={toggleActiveDaysOnly}
+              />
+
+            </div>
+            <div></div>
+
+          </DayStickyTop>
 
           <DragDropContext
             onDragEnd={handleDragEndDays}
@@ -408,7 +480,7 @@ const Days = ({ refresh = false, isMenuOpen, onDaySelect }) => {
             <Droppable droppableId="droppable-days" type="day">
               {(provided) => (
                 <div {...provided.droppableProps} ref={provided.innerRef}>
-                  {days.map((day, index) => (
+                  {visibleDays.map((day, index) => (
                     <AccordionDraggable
                       item={day}
                       key={day.id.toString()}
@@ -416,21 +488,34 @@ const Days = ({ refresh = false, isMenuOpen, onDaySelect }) => {
                       index={index}
                       title={
                         <DayTitleWrapper>
-                          {colorCodingEnabled && (                              
+                          {colorCodingEnabled ? (
                             <ColorItemInTitle className='ColorItemInTitle'
                               color={colors[day.color]}
-                              selected={true}
+                              //selected={!!day.active} //jos haluttaisiin varmistaa, että varmasti on boolean
+                              selected={day.active}
+                              onClick={() => handleToggleDayColor(day)}
                             >
                               {colorDefinitions[day.color]?.shortname || ''}
                             </ColorItemInTitle>
+                          ) : (
+                            <span className='activemark'
+                              onClick={() => handleToggleDayColor(day)}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={!!day.active}
+                                readOnly
+                                style={{ pointerEvents: 'none' }}
+                              />
+                            </span>
                           )}
-                          <DayTitleStyled>{day.name}</DayTitleStyled>
+                          <DayTitleStyled $active={!!day.active}>{day.name}</DayTitleStyled>
                         </DayTitleWrapper>
                       }
-                      icons={                        
-                          <IconWrapper className='IconWrapper' onClick={() => handleEditDay(day)}>
-                            <FontAwesomeIcon icon={faEdit} />
-                          </IconWrapper>                        
+                      icons={
+                        <IconWrapper className='IconWrapper' onClick={() => handleEditDay(day)}>
+                          <FontAwesomeIcon icon={faEdit} />
+                        </IconWrapper>
                       }
                       //defaultExpanded={day.order === 1} //ylin päivä oletuksena auki
                       defaultExpanded={true}

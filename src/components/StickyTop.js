@@ -62,4 +62,29 @@ export const ProductStickyTop = styled(StickyTop)`
 
 `;
 
+export const DayStickyTop = styled(StickyTop)`
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* vasen, keskiosa, oikea */
+  align-items: center;
+  gap: 10px; /* Sarakkeiden väli */  
+  padding-left: 10px;
+  padding-bottom: 5px;
 
+  .day-header {
+    justify-self: start;
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .day-switch {
+    justify-self: center;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .day-right {
+    justify-self: end;
+  }
+`;
