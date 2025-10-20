@@ -1,6 +1,7 @@
 # Ostokseni
 
-Progressive Web App (PWA) ostoslistojen ja päiväsuunnitelmien hallintaan.
+Progressive Web App (PWA) ostoslistojen ja päiväsuunnitelmien hallintaan. 
+Katso myös sivusto: https://seijalauronen.github.io/
 
 ## Ominaisuudet
 
