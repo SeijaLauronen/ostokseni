@@ -20,6 +20,11 @@ export const ProductContainer = styled(Container)`
   }
 `;
 
+// Lisää tilaa ylös, koska värifiltteri mahdollinen
+export const DayContainer = styled(ProductContainer)`
+  padding-top: 110px;
+`;
+
 export const FormContainer = styled.div`
 padding: 20px;
 background-color: #fff;

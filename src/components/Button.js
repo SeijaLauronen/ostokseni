@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTrash, faSave, faTimes, faPlus, faQuestion, faCopy, faPaste, faShare, faUndo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTrash, faSave, faTimes, faPlus, faQuestion, faCopy, faPaste, faShare, faUndo, faTriangleExclamation, faArrowRightArrowLeft, faArrowsUpDown, faArrowDown } from '@fortawesome/free-solid-svg-icons';
 import FilterWithCrossIcon from './FilterIcon';
 
 const Button = styled.button`
@@ -43,6 +43,32 @@ const ButtonComponent = ({ icon, children, defaultText, ...props }) => (
 
 export default ButtonComponent;
 
+// Useita ikoneita vierekkäin
+const ButtonComponentComplex = ({ icon, children, defaultText, ...props }) => (
+  <Button {...props}>
+    {Array.isArray(icon) ? (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '1px',        // ← säädä tästä
+        marginRight: '4px'
+      }}>
+        {icon.map((icn, i) => (
+          <FontAwesomeIcon
+            key={i}
+            icon={icn}
+            style={{ lineHeight: 1 }}
+          />
+        ))}
+      </span>
+    ) : (
+      icon && <FontAwesomeIcon icon={icon} />
+    )}
+
+    {children || defaultText}
+  </Button>
+  
+);
 
 const CloseButton = styled.div`
 padding: 10px;
@@ -72,12 +98,32 @@ const IconButtonGreen = styled(({ icon, defaultText, ...props }) => (
   }
 `;
 
+const IconButtonGrey = styled(({ icon, defaultText, ...props }) => (
+  <ButtonComponent icon={icon} defaultText={defaultText} {...props} />
+))`
+
+  background-color: #efefef; 
+  color: black ;
+  padding: 5px 10px;
+  &:hover {
+    background-color:#ccc ;
+  }
+  &:focus {
+    background-color:#ccc ;
+  }
+`;
+
 export const SaveButton = (props) => <IconButtonGreen icon={faSave} defaultText="Tallenna" {...props} />;
 export const OkButton = (props) => <IconButtonGreen icon={faCheck} defaultText="OK" {...props} />;
 export const CopyButton = (props) => <IconButtonGreen icon={faCopy} defaultText="Kopioi" {...props} />;
 export const PasteButton = (props) => <IconButtonGreen icon={faPaste} defaultText="Liitä" {...props} />;
 export const ShareButton = (props) => <IconButtonGreen icon={faShare} defaultText="Jaa" {...props} />;
 export const AddButton = (props) => <IconButtonGreen icon={faPlus} defaultText="" {...props} />;
+export const ChangeButton = (props) => <IconButtonGrey icon={faArrowRightArrowLeft} defaultText="" {...props} />;
+export const ChangeButtonUpDown = (props) => <IconButtonGrey icon={faArrowsUpDown} defaultText="" {...props} />;
+export const ChangeButtonDown = (props) => <IconButtonGrey icon={faArrowDown} defaultText="" {...props} />;
+
+
 
 export const CancelButton = styled(props => (
   <ButtonComponent icon={faTimes} defaultText="Peruuta" {...props} />
