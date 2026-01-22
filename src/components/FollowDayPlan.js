@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Accordion from './Accordion';
-import Item, { DayProductItem, DayClassItem } from './Item';
+import { DayProductItem, DayClassItem } from './Item';
 import { InputWrapper } from '../components/Container';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ChangeButton } from './Button';
 import EditFollowDayForm from '../views/forms/EditFollowDayForm';
 import { DayTitleWrapper, DayTitleStyled } from './DayComponents';
@@ -57,31 +56,7 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
     }, [checkedProducts, initialized]);
 
 
-    // Siivoaa vanhentuneet tuotteet checkedProducts-taulukosta
-    const cleanCheckedProductsXXX = (checkedArray, currentDays) => {
-        return checkedArray.filter(key => {
-            const [dayId, mealId, productId] = key.split('-').map(Number);
-
-            // Etsitään päivä
-            const day = currentDays.find(d => d.id === dayId);
-            if (!day) return false; // Poistetaan jos päivää ei löydy
-
-            // Etsitään ateria
-            const meal = day.meals?.find(m => m.mealId === mealId);
-            if (!meal) return false; // Poistetaan jos ateriaa ei löydy
-
-            // Etsitään tuote aterian mealClassesista
-            const productExists = meal.mealClasses?.some(mealClass => {
-                const productIds = mealClass.products
-                    ? String(mealClass.products).replace(/[{}]/g, '').split(',').map(Number)
-                    : [];
-                return productIds.includes(productId);
-            });
-
-            return productExists; // Säilytetään vain jos tuote löytyy
-        });
-    };
-
+    // Siivoaa vanhentuneet tuotteet checkedProducts-taulukosta    
     const cleanCheckedProducts = (checkedArray, currentDays) => {
         return checkedArray.filter(key => {
             const parts = key.split('-');
@@ -121,12 +96,6 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
         );
     }
 
-    //(day.id, meal.mealId, meal.name, mcIndex, productClass.id, productClass.name)}
-    // const handlechangeProducts = (dayId, mealId, melaName, mealIndex, productClassId, productClassName) => {
-    //alert(`Ei vielä toteutettu: Vaihdetaan tuotteita päivä: ${dayId}, ateria: ${mealId}`);
-    //alert(`Ei vielä toteutettu: Vaihdetaan tuotteita päivä: ${dayId}, ateria: ${mealId} ${melaName}, mealIndex: ${mealIndex}, tuoteluokka: ${productClassId} ${productClassName}`);
-
-    //  }
     const handlechangeProducts = (dayId, mealId, mealName, classIndex, classId, className) => {
         setPlannedMeal({
             open: true,
@@ -137,7 +106,7 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
             classId,
             className
         });
-        console.log("handlechangeProducts", editPlannedMeal);
+        //console.log("handlechangeProducts", editPlannedMeal);
     };
 
     const isProductChecked = (dayId, mealId, productId) => {
@@ -158,19 +127,6 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
     };
 
     // Tarkistaa ovatko KAIKKI aterian tuotteet valittuna
-    const isDayMealProductsCheckedXXX = (dayId, mealId) => {
-        // etsi päivä ja ateria
-        const day = days.find(d => d.id === dayId);
-        if (!day) return false;
-        const meal = day.meals?.find(m => m.mealId === mealId);
-        if (!meal) return false;
-
-        const allProductIds = getProductIdsFromMeal(meal);
-        if (allProductIds.length === 0) return false;
-
-        return allProductIds.every(pid => checkedProducts.includes(`${dayId}-${mealId}-${pid}`));
-    };
-
     const isDayMealProductsChecked = (dayId, mealId) => {
         const day = days.find(d => d.id === dayId);
         if (!day) return false;
@@ -190,31 +146,17 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
         );
     };
 
-
-    // OMA
-    const filterProductsForChangeXXX = (classId, day) => {
-        const productsByClass = allProducts.filter(p => (classId === -1 ? true : p.classId === classId));
-
-        let productsForChange = productsByClass;
-
-        if (day !== null && colorCodingEnabled && day?.color && day?.color !== '') {
-            productsForChange = productsByClass.filter(p => (p[day?.color] ? true : false));
-        }
-
-        console.log("filterProductsForChange", classId, day?.color, productsForChange);
-        //console.log("filterProductsForChange", classId, productsForChange);
-        return productsForChange;
-    }
+    const passesColorFilter = (product, day, colorCodingEnabled) => {
+        if (!day || !colorCodingEnabled || !day.color) return true;
+        return Boolean(product[day.color]);
+    };
 
     const filterProductsForChange = (classId, day) => {
         return allProducts
             // suodata luokan mukaan (tai kaikki jos classId === -1)
             .filter(p => classId === -1 || p.classId === classId)
-            // suodata värin mukaan vain jos ehdot täyttyvät
-            .filter(p => {
-                if (!day || !colorCodingEnabled || !day.color) return true;
-                return Boolean(p[day.color]);
-            });
+            // suodata värin mukaan
+            .filter(p => passesColorFilter(p, day, colorCodingEnabled));
     };
 
     // Onko ateria kuitattu ilman tuotteita
@@ -308,10 +250,13 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
     const selectedClass = meal?.mealClasses.find(
         mc => mc.classId === editPlannedMeal.classId
     );
+
+    // Ei fillteröidä värejä tässä, koska käyttäjä saattaa muuttaa päivän värikoodia, niin antaa kaikkien valintojen pysyä 
+    // mutta näytetään vain värikoodin mukaiset tuotteet valintaikkunassa 
     const selectedProductIds = selectedClass?.products || [];
-    // console.log("FollowDayPlan selectedProductIds", selectedProductIds);
-    console.log("FollowDayPlan rendering", day);
-    console.log("editPlannedMeal", editPlannedMeal);
+
+    //console.log("FollowDayPlan rendering", day);
+    //console.log("editPlannedMeal", editPlannedMeal);
 
     return (
         <div>
@@ -379,6 +324,7 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
                                         accordionmini={true}
                                         className='Accordion'
                                     >
+                                        {/* mealClasses = aterioille valitut tuoteluokat (productClass) */}
                                         {meal.mealClasses && meal.mealClasses.length > 0 ? (
                                             <>
                                                 {meal.mealClasses.map((mealClass, mcIndex) => { /* huom return, koska aaltosulut ja monta lauseketta */
@@ -388,17 +334,25 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
                                                         ? String(mealClass.products).replace(/[{}]/g, '').split(',').map(Number)
                                                         : [];
                                                     // Suodatetaan tuotteet, jotka kuuluvat tähän mealClass-luokkaan tai luokkana on vapaa valinta: -1
-                                                    // TODO kts onko allProducts vai jokin muu...
+                                                    // TODO kts onko allProducts vai jokin muu...                                                    
+
                                                     let selectedProducts = allProducts?.filter(
-                                                        (product) => productIds.includes(product.id) && (mealClass.classId === product.classId || mealClass.classId === -1)
+                                                        (product) =>
+                                                            productIds.includes(product.id) &&
+                                                            (mealClass.classId === product.classId || mealClass.classId === -1) &&
+                                                            passesColorFilter(product, day, colorCodingEnabled)
                                                     );
+
+                                                    const baseName = productClass?.name ?? 'Vapaa valinta';
+                                                    const infoPart = mealClass.info ? `: ${mealClass.info}` : '';
+                                                    const fullTitle = `${baseName}${infoPart}`;
+                                                    const mealClassTitle = mealClass.optional ? `(${fullTitle})` : fullTitle;
 
                                                     return (
 
                                                         <span key={`${day.id}-${meal.mealId}-${mcIndex}`}>
                                                             <DayClassItem>
-                                                                {productClass ? productClass.name : '- '}
-                                                                {mealClass.info ? ' ' + mealClass.info + ': ' : ''}
+                                                                {mealClassTitle}
                                                                 <ChangeButton
                                                                     onClick={() => handlechangeProducts(day.id, meal.mealId, meal.name, mcIndex, productClass ? productClass.id : -1, productClass ? productClass.name : "Vapaa valinta")}
                                                                 />

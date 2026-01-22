@@ -327,7 +327,7 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
                           />
                         </>
                       )}
-                      {!hidePrice && (
+                      {!hidePrice && (                        
                         <InputPrice
                           lang="fi-FI"  //jotta hyväksyy pisteen puhelimen näppikseltä
                           disabled={isPrintOpen}
@@ -347,7 +347,7 @@ const ShoppingList = ({ refresh = false, isMenuOpen }) => {
                             }
                           }}
                           placeholder="Hinta"
-                        />
+                        />                        
                       )}
 
                     </InputWrapper>
