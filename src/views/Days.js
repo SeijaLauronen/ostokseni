@@ -199,19 +199,28 @@ const Days = ({ refresh = false, isMenuOpen }) => {
     localStorage.setItem('followPlan', followPlan ? 'followPlan' : '');
   }, [followPlan]);
 
-  const [expandedStates, setExpandedStates] = useState({}); // Avattujen accordionien tilat, säilyy vain tällä komponentilla
+  //const [expandedStates, setExpandedStates] = useState({}); // Avattujen accordionien tilat, säilyy vain tällä komponentilla
+  const [dayPlanOpenItems, setDayPlanOpenItems] = useState(() => {
+    const saved = localStorage.getItem('dayPlanOpenItems');
+    return saved ? JSON.parse(saved) : [];
+  });
 
+  useEffect(() => {
+    localStorage.setItem('dayPlanOpenItems', JSON.stringify(dayPlanOpenItems));
+  }, [dayPlanOpenItems]);
+
+  /*
   const handleAccordionToggle = (id, isExpanded) => {
-    setExpandedStates((prev) => ({
+    setDayPlanOpenItems((prev) => ({
       ...prev,
       [id]: isExpanded,
     }));
   };
 
   const resetExpandedState = () => {
-    setExpandedStates({});
+    setDayPlanOpenItems({});
   };
-
+*/
 
   const handleAddDay = async () => {
     try {
@@ -220,11 +229,7 @@ const Days = ({ refresh = false, isMenuOpen }) => {
       setNewDay('');
       fetchAndSetDays();
 
-      setExpandedStates((prev) => ({
-        ...prev,
-        [newDayId]: true
-
-      }));
+      setDayPlanOpenItems((prev) => [...prev, String(newDayId)]);
 
     } catch (err) {
       setError(err.message);
@@ -246,6 +251,23 @@ const Days = ({ refresh = false, isMenuOpen }) => {
 
   const handleDeleteDay = async (id) => {
     try {
+      // Poista päivään liittyvät merkinnät localStoragesta
+      setDayPlanOpenItems((prev) =>
+        prev.filter(item => {
+          // Poista day.id ja kaikki "day.id-meal.id" merkinnät
+          return !item.startsWith(String(id)) && item !== String(id);
+        })
+      );
+
+      // Sama closedItemsExecution:lle FollowDayPlanissa
+      const closedItems = localStorage.getItem('closedItemsExecution');
+      if (closedItems) {
+        const parsed = JSON.parse(closedItems);
+        const filtered = parsed.filter(item => {
+          return !item.startsWith(String(id)) && item !== String(id);
+        });
+        localStorage.setItem('closedItemsExecution', JSON.stringify(filtered));
+      }
       await deleteDay(id);
       resetForm();
     } catch (err) {
@@ -321,6 +343,21 @@ const Days = ({ refresh = false, isMenuOpen }) => {
 
   const handleDeleteMeal = async (day, mealIdToDelete) => {
     try {
+      // Poista ateriaan liittyvä merkintä localStoragesta
+      const mealKey = `${day.id}-${mealIdToDelete}`;
+
+      setDayPlanOpenItems((prev) =>
+        prev.filter(item => item !== mealKey)
+      );
+
+      // Sama closedItemsExecution:lle
+      const closedItems = localStorage.getItem('closedItemsExecution');
+      if (closedItems) {
+        const parsed = JSON.parse(closedItems);
+        const filtered = parsed.filter(item => item !== mealKey);
+        localStorage.setItem('closedItemsExecution', JSON.stringify(filtered));
+      }
+
       // Suodata pois ateria, jonka id vastaa mealIdToDelete
       const updatedDay = {
         ...day,
@@ -658,10 +695,12 @@ const Days = ({ refresh = false, isMenuOpen }) => {
                                 <FontAwesomeIcon icon={faEdit} />
                               </IconWrapper>
                             }
-                            //defaultExpanded={day.order === 1} //ylin päivä oletuksena auki
-                            defaultExpanded={true}
-                            isExpanded={expandedStates[day.id] || false} // Jos ei ole tallennettua tilaa, oletuksena kiinni
-                            onToggle={(isExpanded) => handleAccordionToggle(day.id, isExpanded)}
+                            defaultExpanded={dayPlanOpenItems.includes(String(day.id))}
+                            onToggle={(isExpanded) => setDayPlanOpenItems(prev =>
+                              isExpanded
+                                ? [...prev, String(day.id)]
+                                : prev.filter(id => id !== String(day.id))
+                            )}
                             isDroppable={false}
                           >
                             <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{day.info}</pre>
@@ -673,12 +712,17 @@ const Days = ({ refresh = false, isMenuOpen }) => {
                                       {getSortedMealsForDay(day).map((meal, mealIndex) => (
                                         meal ? (
                                           <AccordionDraggable
-                                            item={{...meal, id: meal.mealId}}
+                                            item={{ ...meal, id: meal.mealId }}
                                             key={meal.mealId.toString()}
                                             draggableId={`meal-${day.id}-${meal.mealId}`}
-                                            index={mealIndex}                                            
+                                            index={mealIndex}
                                             title={<MealTitleStyled>{meal.name}</MealTitleStyled>}
-                                            defaultExpanded={true}
+                                            defaultExpanded={dayPlanOpenItems.includes(`${day.id}-${meal.mealId}`)}
+                                            onToggle={(isExpanded) => setDayPlanOpenItems(prev =>
+                                              isExpanded
+                                                ? [...prev, `${day.id}-${meal.mealId}`]
+                                                : prev.filter(id => id !== `${day.id}-${meal.mealId}`)
+                                            )}
                                             icons={
                                               <IconContainer>
                                                 <IconWrapper onClick={() => handleEditMeal(day, meal)}>
@@ -689,7 +733,7 @@ const Days = ({ refresh = false, isMenuOpen }) => {
                                           >
                                             <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{meal.info}</pre>
                                             {getSortedMealClasses(meal.mealClasses, productClasses)?.map((mealClass) => {
-                                              //{meal.mealClasses?.map((mealClass) => {
+
                                               const productClass = productClasses.find((p) => p.id === mealClass.classId);
                                               const name = productClass?.name || "Vapaa valinta";
                                               const info = mealClass.info ? ` ${mealClass.info}` : ""; // Lisätään väli vain, jos info on olemassa
@@ -722,8 +766,6 @@ const Days = ({ refresh = false, isMenuOpen }) => {
                                                 .join(", "); // Yhdistetään pilkulla erotetuksi merkkijonoksi
 
 
-                                              //const content = `${name} ${info} ${selectedProductDetails || ''}`;
-
                                               // Rakennetaan otsikon sisältö
                                               const titleContent = (
                                                 <span>
@@ -736,8 +778,6 @@ const Days = ({ refresh = false, isMenuOpen }) => {
                                               return (
                                                 <Accordion classnames="mealClassAccordion"
                                                   key={mealClass.classId}
-                                                  //title={mealClass.optional ? `(${titleContent})` : titleContent}
-                                                  //title={name}
                                                   accordionmini={true}
                                                   title={titleContent}
                                                   defaultExpanded={false}
@@ -782,7 +822,7 @@ const Days = ({ refresh = false, isMenuOpen }) => {
                               </DragDropContext>
                             ) : (
                               <>
-                                {/* */}
+                                {/* Aterioita ei ole määritelty */}
                               </>
 
                             )}

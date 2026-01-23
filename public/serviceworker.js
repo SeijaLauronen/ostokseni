@@ -1,4 +1,4 @@
-const programVersion = '2026-01-22: 2.355';
+const programVersion = '2026-01-23: 2.357';
 const staticCacheName = 'myshopping-static-2355'; 
 const dynamicCacheName = 'myshopping-dynamic-2355'; // Ei välttämätön
 

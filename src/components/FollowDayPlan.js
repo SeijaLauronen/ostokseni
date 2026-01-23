@@ -56,6 +56,17 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
     }, [checkedProducts, initialized]);
 
 
+    // Pidetään kirjaa, mitkä päivät ja ateriat käyttäjä on sulkenut
+    const [closedItemsExecution, setClosedItemsExecution] = useState(() => {
+        const saved = localStorage.getItem('closedItemsExecution');
+        return saved ? JSON.parse(saved) : []; // Array merkkijonoja
+    });
+
+    useEffect(() => {
+        localStorage.setItem('closedItemsExecution', JSON.stringify(closedItemsExecution));
+    }, [closedItemsExecution]);
+
+
     // Siivoaa vanhentuneet tuotteet checkedProducts-taulukosta    
     const cleanCheckedProducts = (checkedArray, currentDays) => {
         return checkedArray.filter(key => {
@@ -277,7 +288,12 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
                 <Accordion
                     key={index}
                     //title={day.name}
-                    defaultExpanded={true}
+                    defaultExpanded={!closedItemsExecution.includes(String(day.id))}
+                    onToggle={(isExpanded) => setClosedItemsExecution(prev =>
+                        isExpanded
+                            ? prev.filter(id => id !== String(day.id))
+                            : [...prev, String(day.id)]
+                    )}
                     title={
                         <DayTitleWrapper>
                             {colorCodingEnabled ? (
@@ -320,7 +336,12 @@ const FollowDayPlan = ({ days = [], setDays, productClasses = [], allProducts = 
                                                 <span>{meal.name}</span>
                                             </div>
                                         }
-                                        defaultExpanded={true}
+                                        defaultExpanded={!closedItemsExecution.includes(`${day.id}-${meal.mealId}`)}
+                                        onToggle={(isExpanded) => setClosedItemsExecution(prev =>
+                                            isExpanded
+                                                ? prev.filter(id => id !== `${day.id}-${meal.mealId}`)
+                                                : [...prev, `${day.id}-${meal.mealId}`]
+                                        )}
                                         accordionmini={true}
                                         className='Accordion'
                                     >
